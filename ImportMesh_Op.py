@@ -1,9 +1,11 @@
 import bpy
 import os
+import math
 import numpy as np
 
 from mathutils import Vector
-from utils import *
+from .utils import *
+from .utils_debug import *
 
 def import_mesh(path):
     _, extension = os.path.splitext(path)

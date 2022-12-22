@@ -2,6 +2,7 @@
 __pycache__/
 
 result_*/
+data/
 
 *.yaml
 *.png
@@ -12,6 +13,8 @@ result_*/
 *.stl
 *.ply
 *.obj
+*.glb
+*.fbx
 *.blend
 *.blend1
 *.mat
