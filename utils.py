@@ -1,5 +1,6 @@
 import bpy
 import os
+import math
 from mathutils import Vector
 
 def mkdir(dir_path, exist_ok=True):
@@ -40,3 +41,18 @@ def set_direction_to(object, focus_point=Vector((0.0, 0.0, 0.0)), distance=10.0)
     rot_quat = looking_direction.to_track_quat('Z', 'Y')
     object.rotation_euler = rot_quat.to_euler()
     object.location = rot_quat @ Vector((0.0, 0.0, distance))
+
+def get_frame_range_obj(obj):
+    if obj.animation_data:
+        frame_start, frame_end = map(int, obj.animation_data.action.frame_range)
+    else:
+        frame_start, frame_end = 0, 0
+    return frame_start, frame_end
+
+def get_frame_range_scene(scene):
+    min_frame_start, max_frame_end = math.inf, 0
+    for obj in scene.objects:
+        frame_start, frame_end = get_frame_range_obj(obj)
+        min_frame_start = min(min_frame_start, frame_start)
+        max_frame_end = max(max_frame_end, frame_end)
+    return min_frame_start, max_frame_end
