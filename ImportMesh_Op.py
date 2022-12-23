@@ -1,5 +1,6 @@
 import bpy
 import os
+import shutil
 import math
 import numpy as np
 
@@ -13,6 +14,9 @@ def import_mesh(path):
         bpy.ops.import_mesh.ply(filepath=path)
     elif extension == '.stl':
         bpy.ops.import_mesh.stl(filepath=path)
+    elif extension == '.blend':
+        shutil.copy(path, 'tmp.blend')
+        bpy.ops.wm.open_mainfile(filepath='tmp.blend')
     else:
         raise ValueError('bad mesh extension')
 
@@ -75,34 +79,9 @@ class IMPORT_MESH_OT_ANY(bpy.types.Operator):
     bl_label = 'Import Mesh of any Type'
     bl_idname = 'import_mesh.any'
     def execute(self, context):
-        import_mesh(bpy.path.abspath(context.scene.mesh_path))
-        mesh = context.object
-        move_to_right_place(mesh)
-        return {'FINISHED'}
-
-def add_orthographic_camera(context):
-    debug_print('[INFO] Calling add_orthographic_camera')
-    delete_all(context, 'CAMERA')
-    
-    mesh = find_all(context, 'MESH')[0]
-    maxLen = max(mesh.measure.lenX, mesh.measure.lenY)
-    print(maxLen)
-    
-    bpy.ops.object.camera_add(location=(0, 0, 10), rotation=(0, 0, -1))
-    context.scene.camera = context.object
-    camera = context.scene.camera
-    set_direction_to(camera, distance=10)
-    # This sentence fails on blender 2.93.11, but work well on blender 2.83.20 and 3.3.1
-    bpy.ops.transform.rotate(value=math.pi, orient_axis='Z')
-
-    camera.data.type = 'ORTHO'
-    camera.data.ortho_scale = maxLen
-    camera.data.clip_end = 10000  # XXX: increase this value when rendered result is blank!
-    return camera
-
-class CAMERA_OT_ADD_ORTHOGRAPHIC(bpy.types.Operator):
-    bl_label = 'CAMERA_OT_ADD_ORTHOGRAPHIC'
-    bl_idname = 'camera.add_orthographic'
-    def execute(self, context):
-        add_orthographic_camera(context)
+        path = bpy.path.abspath(context.scene.mesh_path)
+        _, extension = os.path.splitext(path)
+        import_mesh(path)
+        if extension != '.blend':
+            move_to_right_place(context.object)
         return {'FINISHED'}
