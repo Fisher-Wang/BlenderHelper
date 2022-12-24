@@ -15,7 +15,7 @@ bl_info = {
     "name" : "DynamicMVPSRenderer",
     "author" : "Fisher Wang",
     "description" : "",
-    "blender" : (3, 3, 1),
+    "blender" : (2, 83, 20),
     "version" : (0, 0, 1),
     "location" : "View3d",
     "warning" : "",
@@ -32,6 +32,8 @@ from .Camera_Panel import *
 from .AnimationControl_Panel import *
 from .Output_Op import *
 from .Output_Panel import *
+from .Light_Op import *
+from .Light_Panel import *
 from .property import ObjectMeasurePropertyGroup
 
 classes = (
@@ -44,10 +46,13 @@ classes = (
     
     HELPER_PT_ANIMATION_CONTROL,
     
+    RENDER_OT_SET_LIGHT_DIRECTION,
+    HELPER_PT_LIGHT,
+    
     SCENE_OT_EXPORT_NORMAL,
+    SCENE_OT_EXPORT_IMAGE,
     HELPER_PT_OUTPUT,
 
-    
     ObjectMeasurePropertyGroup,
 )
 

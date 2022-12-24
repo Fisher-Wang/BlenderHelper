@@ -3,6 +3,8 @@ import os
 import math
 from mathutils import Vector
 
+VIEW_LAYER_NAME = 'ViewLayer'
+
 def mkdir(dir_path, exist_ok=True):
     os.makedirs(dir_path, exist_ok=exist_ok)
     return dir_path

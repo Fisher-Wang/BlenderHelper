@@ -1,18 +1,15 @@
 import OpenEXR
 import Imath
-import sys, os, shutil
 import scipy.io as scio
 import numpy as np
-from matplotlib import pyplot as plt
-from sklearn.preprocessing import normalize
 import argparse
 from os.path import join as pjoin
 from skimage import io, img_as_bool
-import yaml
 from PIL import Image
-import cv2
-from glob import glob
-from utils import mkdir
+from matplotlib import cm
+import matplotlib.pyplot as plt
+
+view_layer_name = 'ViewLayer'
 
 def nmap_for_show(nmap):
     return ((nmap+1) / 2 * 255).astype('uint8')
@@ -49,15 +46,8 @@ def normalize(arr):
     arr[valid] = arr[valid] / norm[valid][..., None]
     return arr
 
-def main(args, src_dir, dst_dir):
-    if args.blender_version == '3':
-        view_layer_name = 'ViewLayer'
-    elif args.blender_version == '2':
-        view_layer_name = 'View Layer'
-    else:
-        raise ValueError('Bad blender version!')
-    
-    input_exr_path = pjoin(src_dir, 'Normal_gt.exr')
+def main(src_dir, dst_dir):
+    input_exr_path = pjoin(src_dir, 'result_normal_depth.exr')
     output_nmap_path = pjoin(dst_dir, 'Normal_gt.mat')
     output_nmap_png_path = pjoin(dst_dir, 'Normal_gt.png')
     output_mask_path = pjoin(dst_dir, 'mask.png')
@@ -69,18 +59,58 @@ def main(args, src_dir, dst_dir):
     normal[..., 1] = channels[f'{view_layer_name}.Normal.Y']
     normal[..., 2] = channels[f'{view_layer_name}.Normal.Z']
     normal = normalize(normal)
-    print(normal.min(), normal.max())
-    io.imsave(output_nmap_png_path, nmap_for_show(normal))
-    scio.savemat(output_nmap_path, {'Normal_gt': normal})
 
     ## Mask
     mask = ~np.all(normal == 0, axis=-1)
     save_binary_image(output_mask_path, mask)
     
+    ## Convert World to Camera
+    RT = np.loadtxt(pjoin(src_dir, 'camera_RT.txt'))
+    R = RT[:, :3]
+    normal[mask] = normal[mask] @ R.T @ np.array(((1, 0, 0), (0, -1, 0), (0, 0, -1)))
+    
+    ## Save Normal
+    print(normal.min(), normal.max())
+    io.imsave(output_nmap_png_path, nmap_for_show(normal))
+    scio.savemat(output_nmap_path, {'Normal_gt': normal})
+    
+    ## Depth
+    # TODO: mesh are not in same size, maybe convert into pixel unit in order to unify them
+    depth = channels[f'{view_layer_name}.Depth.Z'].copy()
+    valid = depth != 1e10
+    depth[~valid] = np.nan
+    depth[~mask] = np.nan
+    depth = -depth
+    depth -= np.nanmin(depth)  # TODO: use common depth stantard?
+    np.save(pjoin(dst_dir, 'Depth.npy'), depth)
+    
+    ## Depth Preview
+    cmap = cm.get_cmap("jet").copy()
+    cmap.set_bad(color='white')
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1)
+    plt.imshow(depth, cmap=cmap)
+    plt.colorbar()
+    ax.get_xaxis().set_ticks([])
+    ax.get_yaxis().set_ticks([])
+    fig.savefig(pjoin(dst_dir, 'Depth_colorbar.png'), dpi=300, bbox_inches='tight')
+    
+    norm = plt.Normalize(vmin=np.nanmin(depth), vmax=np.nanmax(depth))
+    img = cmap(norm(depth))
+    plt.imsave(pjoin(dst_dir, 'Depth.png'), img)
+
+def handle_single_image(src_image_path):
+    channels, (h, w) = get_channels_size(src_image_path)
+    img = np.zeros((h, w, 3))
+    img[:, :, 0] = channels[f'{view_layer_name}.Combined.R']
+    img[:, :, 1] = channels[f'{view_layer_name}.Combined.G']
+    img[:, :, 2] = channels[f'{view_layer_name}.Combined.B']
+    return img
+
 if  __name__ =="__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--blender_version', '-b', default='3', choices=['3', '2'])
     parser.add_argument('--dir', '-d', required=True)
     args = parser.parse_args()
     
-    main(args, args.dir, args.dir)
+    main(args.dir, args.dir)

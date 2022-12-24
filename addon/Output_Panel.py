@@ -12,3 +12,5 @@ class HELPER_PT_OUTPUT(Panel):
         layout = self.layout
         row = layout.row()
         row.operator('scene.export_normal')
+        row = layout.row()
+        row.operator('scene.export_image')
