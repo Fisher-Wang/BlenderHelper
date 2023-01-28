@@ -34,6 +34,9 @@ from .Output_Op import *
 from .Output_Panel import *
 from .Light_Op import *
 from .Light_Panel import *
+from .Pipeline_Op import *
+from .Pipeline_Panel import *
+from .Setting_Panel import *
 from .property import ObjectMeasurePropertyGroup
 
 classes = (
@@ -42,16 +45,24 @@ classes = (
     HELPER_PT_IMPORT_MESH,
     
     CAMERA_OT_ADD_ORTHOGRAPHIC,
+    CAMERA_OT_SET_POSITION,
     HELPER_PT_CAMERA,
     
     HELPER_PT_ANIMATION_CONTROL,
     
     RENDER_OT_SET_LIGHT_DIRECTION,
+    RENDER_OT_MULTI_LIGHT,
     HELPER_PT_LIGHT,
     
     SCENE_OT_EXPORT_NORMAL,
     SCENE_OT_EXPORT_IMAGE,
+    SCENE_OT_EXPORT_ALBEDO,
     HELPER_PT_OUTPUT,
+    
+    RENDER_OT_PIPELINE,
+    HELPER_PT_PIPELINE,
+    
+    HELPER_PT_RENDER_SETTING,
 
     ObjectMeasurePropertyGroup,
 )

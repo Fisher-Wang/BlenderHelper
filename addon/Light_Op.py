@@ -19,10 +19,10 @@ def create_light_sun(context):
     return create_light_base(context, energy=1, type='SUN')
 
 def set_light_direction(light, theta, phi):
-    theta = theta / 180 * math.pi
-    phi = phi / 180 * math.pi
-    light.location = (math.cos(theta) * math.sin(phi), math.sin(theta) * math.sin(phi), math.cos(phi))
+    location = phi_theta_to_xyz(phi, theta)
+    light.location = location
     set_direction_to(light)
+    return location
 
 class RENDER_OT_SET_LIGHT_DIRECTION(Operator):
     bl_idname = 'render.set_light_direction'
@@ -35,4 +35,27 @@ class RENDER_OT_SET_LIGHT_DIRECTION(Operator):
         else:
             light = create_light_sun(context)
         set_light_direction(light, context.scene.theta, context.scene.phi)
+        return {'FINISHED'}
+
+def multi_light(context, num_light=3):
+    delete_all(context, ['LIGHT'])
+    ls = []
+    for i in range(num_light):
+        light = create_light_sun(context)
+        ld = set_light_direction(light, 360 / num_light * i, 45)
+        li = light.data.energy
+        lc = light.data.color
+        ls.append({
+            'light_direction': list(ld),
+            'light_intensity': li,
+            'light_color': list(lc),
+        })
+    return ls
+
+class RENDER_OT_MULTI_LIGHT(Operator):
+    bl_idname = 'render.multi_light'
+    bl_label = 'Three Light'
+    
+    def execute(self, context):
+        multi_light(context, num_light=3)
         return {'FINISHED'}

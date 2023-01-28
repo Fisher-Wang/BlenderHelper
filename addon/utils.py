@@ -1,6 +1,8 @@
 import bpy
 import os
 import math
+import yaml
+import json
 from mathutils import Vector
 
 VIEW_LAYER_NAME = 'ViewLayer'
@@ -58,3 +60,29 @@ def get_frame_range_scene(scene):
         min_frame_start = min(min_frame_start, frame_start)
         max_frame_end = max(max_frame_end, frame_end)
     return min_frame_start, max_frame_end
+
+def phi_theta_to_xyz(phi, theta):
+    phi = phi / 180 * math.pi
+    theta = theta / 180 * math.pi
+    x = math.cos(theta) * math.sin(phi)
+    y = math.sin(theta) * math.sin(phi)
+    z = math.cos(phi)
+    return (x, y, z)
+
+def switch_cast_shadow(context, enable=True):
+    for object in context.scene.objects:
+        if object.type == 'MESH':
+            object.visible_shadow = enable
+
+def write_yaml(fname: str, data: dict, compact=False):
+    with open(fname, 'w+') as f:
+        yaml.dump(data, f, default_flow_style=compact)
+
+def write_json(fname: str, data: dict):
+    with open(fname, 'w+') as f:
+        json.dump(data, f, indent=4, sort_keys=True)
+
+def read_json(fname: str):
+    with open(fname) as f:
+        data = json.load(f)
+    return data

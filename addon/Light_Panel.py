@@ -16,3 +16,6 @@ class HELPER_PT_LIGHT(Panel):
         row.prop(context.scene, 'theta')
         row = layout.row()
         row.operator('render.set_light_direction', icon='SNAP_NORMAL')
+        row = layout.row()
+        row.operator('render.multi_light')
+        

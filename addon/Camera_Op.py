@@ -1,7 +1,9 @@
 import bpy
 import math
+import numpy as np
 from .utils import *
 from .utils_debug import *
+from mathutils import Vector
 
 def add_orthographic_camera(context):
     debug_print('[INFO] Calling add_orthographic_camera')
@@ -28,4 +30,16 @@ class CAMERA_OT_ADD_ORTHOGRAPHIC(bpy.types.Operator):
     bl_idname = 'camera.add_orthographic'
     def execute(self, context):
         add_orthographic_camera(context)
+        return {'FINISHED'}
+
+def set_camera_pos(cam, phi, theta):
+    dis = np.linalg.norm(np.asarray(cam.location))
+    cam.location = phi_theta_to_xyz(phi, theta)
+    set_direction_to(cam, Vector((0, 0, 0)), distance=dis)
+
+class CAMERA_OT_SET_POSITION(bpy.types.Operator):
+    bl_label = 'Set Position'
+    bl_idname = 'camera.set_position'
+    def execute(self, context):
+        set_camera_pos(context.scene.camera, context.scene.camera_phi, context.scene.camera_theta)
         return {'FINISHED'}

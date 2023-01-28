@@ -90,3 +90,18 @@ def declare_properies():
         set=set_frame,
         description='Current frame (DIY version)'
     )
+    
+    bpy.types.Scene.camera_phi = bpy.props.FloatProperty(
+        name='Cam Phi',
+        default=45,
+        min=0,
+        max=180,
+        description='Angle of pitch'
+    )
+    bpy.types.Scene.camera_theta = bpy.props.FloatProperty(
+        name='Cam Theta',
+        default=0,
+        min=-180,
+        max=360,
+        description='Azimuth'
+    )
