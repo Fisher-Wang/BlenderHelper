@@ -4,11 +4,16 @@ import yaml
 from bpy.types import Operator
 from os.path import join as pjoin
 from .utils import *
+from .ImportMesh_Op import *
 from .Camera_Op import *
 from .Light_Op import *
 from .Output_Op import *
+from .SplitMesh_Op import *
+from .Material_Op import assign_random_material
+from .Transform_Op import trans_rotate, trans_scale_z
+from itertools import product
 
-def pipeline(obj_dir, output_base_dir, obj_names):
+def pipeline_ColorPSNeRF(obj_dir, output_base_dir, obj_names):
     context = bpy.context
     for obj_name in obj_names:
         output_dir = mkdir(pjoin(output_base_dir, obj_name))
@@ -39,21 +44,73 @@ def pipeline(obj_dir, output_base_dir, obj_names):
             get_camera(camera, od)
             
             switch_cast_shadow(context, enable=True)
-            get_all(context, od, normal=True, depth=True, albedo=True)
+            get_all(context, od, normal=True, depth=True, albedo=True, combined=True)
             convert_all(od, od)
             os.rename(pjoin(od, 'image.png'), pjoin(od, 'image_shadow.png'))
             os.rename(pjoin(od, 'image.npy'), pjoin(od, 'image_shadow.npy'))
             
             switch_cast_shadow(context, enable=False)
-            get_all(context, od, normal=False, depth=False, albedo=False)
+            get_all(context, od, combined=True)
             convert_all(od, od)
+
+def pipeline(mesh_dir, output_base_dir, mesh_names, material_types):
+    context = bpy.context
+    for mesh_name in mesh_names:
+        for i, material_type in enumerate(material_types):
+            for scale, angle in product([0.5, 1, 2], range(0, 360, 360//5)):
+                output_dir = mkdir(pjoin(output_base_dir, f'{mesh_name}_{i+1}_{material_type.lower()}_{scale}_{angle}'))
+                print(mesh_name, output_dir)
+                
+                ## Clear
+                delete_all(context, ['MESH'])
+
+                ## Import Mesh
+                mesh_path = pjoin(mesh_dir, f'{mesh_name}.stl')
+                import_mesh(mesh_path)
+                mesh = context.object
+                move_to_right_place(mesh)
+                add_orthographic_camera(context)
+                
+                ## Transform
+                trans_rotate(mesh, angle)
+                trans_scale_z(mesh, scale)
+                
+                ## Split Mesh
+                print('Splitting Object')
+                select_one(context, mesh)
+                split(mesh)
+                
+                ## Attach Material
+                meshes = find_all(context, 'MESH')
+                all_material_params = {}
+                for mesh in meshes:
+                    material, material_params = assign_random_material(material_type)
+                    mesh.data.materials.append(material)
+                    all_material_params[mesh.name] = material_params
+                
+                with open(pjoin(output_dir, 'material_params.yaml'), 'w+') as f:
+                    yaml.dump(all_material_params, f, default_flow_style=False)
+                
+                ## Render Normal Map
+                get_all(context, output_dir, name='result_normal', normal=True)
+                
+                ## Render Lighting
+                render_lighting(context, context.scene.num_light, context.scene.phi_min, context.scene.phi_max, output_dir)
 
 class RENDER_OT_PIPELINE(Operator):
     bl_idname = 'render.pipeline'
     bl_label = 'Pipeline'
     
     def execute(self, context):
-        output_base_dir = bpy.path.abspath(context.scene.output_dir)
-        pipeline('', output_base_dir, ['whale'])  # TODO: temp
-        return {'FINISHED'}
+        conf = read_yaml(bpy.path.abspath(context.scene.yaml_config_path))
+        material_types = []
+        for key, value in conf['materials'].items():
+            material_types += [key] * value
         
+        pipeline(
+            mesh_dir=bpy.path.abspath(context.scene.mesh_dir),
+            output_base_dir=bpy.path.abspath(context.scene.output_base_dir),
+            mesh_names=conf['shape_names'],
+            material_types=material_types,
+        )
+        return {'FINISHED'}

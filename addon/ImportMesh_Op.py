@@ -19,6 +19,8 @@ def import_mesh(path):
         bpy.ops.import_mesh.stl(filepath=path)
     elif extension == '.fbx':
         bpy.ops.import_scene.fbx(filepath=path)
+    elif extension == '.obj':
+        bpy.ops.wm.obj_import(filepath=path)
     elif extension == '.blend':
         dst_path = pjoin(os.path.dirname(path), 'tmp.blend')
         shutil.copy(path, dst_path)  # TODO: delete this if not debugging
@@ -66,7 +68,10 @@ class IMPORT_MESH_OT_ANY(Operator):
     bl_label = 'Import Mesh of any Type'
     bl_idname = 'import_mesh.any'
     def execute(self, context):
+        print(context.scene.num_light)
+        print('hello')
         path = bpy.path.abspath(context.scene.mesh_path)
+        print('!!!!!!!!!\n', path)
         _, extension = os.path.splitext(path)
         import_mesh(path)
         if extension != '.blend':

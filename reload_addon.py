@@ -10,10 +10,13 @@ import sys
 import shutil
 import zipfile
 
-ADDON_NAME = 'addon2'
-cur_dir = os.path.dirname(bpy.path.abspath(bpy.context.space_data.text.filepath))
+#######################
+## Reload Addon
+#######################
 
-def zip_addon():
+ADDON_NAME = 'addon2'
+
+def zip_addon(cur_dir):
     # Remove old zip
     zip_path = pjoin(cur_dir, f'{ADDON_NAME}.zip')
     if os.path.exists(zip_path):
@@ -44,7 +47,9 @@ def copy_to_user_addon_directory(directory, link_path):
     
     shutil.copytree(directory, link_path)
 
-if __name__ == '__main__':    
+def reload():
+    cur_dir = os.path.abspath('.') if bpy.app.background else os.path.dirname(bpy.path.abspath(bpy.context.space_data.text.filepath))
+    
     # Choice 1: Install addon (zip)
     # Sometimes it fails without any reason.
     # zip_addon()
@@ -68,4 +73,6 @@ if __name__ == '__main__':
     
     # Reload addon
     bpy.ops.preferences.addon_enable(module=ADDON_NAME)
-    
+
+if __name__ == '__main__':
+    reload()

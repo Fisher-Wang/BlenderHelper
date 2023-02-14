@@ -116,3 +116,29 @@ def declare_properies():
     
     bpy.types.Scene.obj1 = PointerProperty(type=bpy.types.Object)
     bpy.types.Scene.obj2 = PointerProperty(type=bpy.types.Object)
+    
+    ## Transformation
+    bpy.types.Object.matrix_world_origin = FloatVectorProperty(
+        name='Origin', 
+        size=(4, 4),
+        subtype='MATRIX'
+    )
+    bpy.types.Scene.rotation = FloatProperty(
+        name='Rotation Angle',
+        default=0,
+        min=-180,
+        max=360,
+        description='Rotation angle in XY plane'
+    )
+    bpy.types.Scene.scale_z = FloatProperty(
+        name='Z Scale',
+        default=1,
+        min=0,
+        description='Z scale'
+    )
+    
+    bpy.types.Scene.yaml_config_path = StringProperty(
+        name='YAML Config Path',
+        default='',
+        subtype='FILE_PATH'
+    )

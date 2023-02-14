@@ -3,6 +3,8 @@ import os
 import math
 import yaml
 import json
+from time import time
+import numpy as np
 from mathutils import Vector
 
 VIEW_LAYER_NAME = 'ViewLayer'
@@ -85,4 +87,27 @@ def write_json(fname: str, data: dict):
 def read_json(fname: str):
     with open(fname) as f:
         data = json.load(f)
+    return data
+
+def timer_func(func):
+    ## Ref: https://www.geeksforgeeks.org/timing-functions-with-decorators-python/
+    def wrap_func(*args, **kwargs):
+        t1 = time()
+        result = func(*args, **kwargs)
+        t2 = time()
+        print(f'Function {func.__name__!r} executed in {(t2-t1):.4f}s')
+        return result
+    return wrap_func
+
+def apply_homo_matrix(points: np.ndarray, matrix: np.ndarray):
+    assert(points.shape[-1] == 3)
+    assert(matrix.shape == (4, 4))
+    return np.hstack([points, np.ones((points.shape[0], 1))]) @ matrix.T
+
+def _rand(lo, hi, size):
+    return np.random.random(size) * (hi - lo) + lo
+
+def read_yaml(path):
+    with open(path) as f:
+        data = yaml.load(f, Loader=yaml.Loader)
     return data
