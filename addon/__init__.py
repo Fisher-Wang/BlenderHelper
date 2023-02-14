@@ -37,16 +37,24 @@ from .Light_Panel import *
 from .Pipeline_Op import *
 from .Pipeline_Panel import *
 from .Setting_Panel import *
+from .ImagePlane_Op import *
+from .ImagePlane_Panel import *
 from .property import ObjectMeasurePropertyGroup
 
 classes = (
     IMPORT_MESH_OT_ANY, 
+    MESH_OT_RESCALE,
     MESH_OT_MEASURE,
     HELPER_PT_IMPORT_MESH,
+    
+    SCENE_OT_IMPORT_IMAGE_PLANE,
+    SCENE_OT_SWITCH_VISIBILITY,
+    HELPER_PT_IMPORT_PLANE_IMAGE,
     
     CAMERA_OT_ADD_ORTHOGRAPHIC,
     CAMERA_OT_SET_POSITION,
     HELPER_PT_CAMERA,
+    HELPER_PT_CAMERA_POSE,
     
     HELPER_PT_ANIMATION_CONTROL,
     
@@ -54,6 +62,7 @@ classes = (
     RENDER_OT_MULTI_LIGHT,
     HELPER_PT_LIGHT,
     
+    RENDER_OT_HIDE_OTHERS,
     SCENE_OT_EXPORT_NORMAL,
     SCENE_OT_EXPORT_IMAGE,
     SCENE_OT_EXPORT_ALBEDO,
@@ -69,6 +78,7 @@ classes = (
 
 def register():
     for c in classes:
+        print(c)
         bpy.utils.register_class(c)
     
     from .property import declare_properies

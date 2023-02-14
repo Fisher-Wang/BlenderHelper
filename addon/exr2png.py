@@ -155,6 +155,7 @@ def convert_all(src_dir, dst_dir):
         print(normal.min(), normal.max())
         io.imsave(pjoin(dst_dir, 'Normal_gt.png'), nmap_for_show(normal))
         np.save(pjoin(dst_dir, 'Normal_gt.npy'), normal)
+        scio.savemat(pjoin(dst_dir, 'Normal_gt.mat'), {'Normal_gt': normal})
         
     ## Depth
     if f'{view_layer_name}.Depth.Z' in channels.keys():

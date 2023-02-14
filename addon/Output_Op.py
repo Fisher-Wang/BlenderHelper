@@ -137,3 +137,15 @@ def get_all(context, output_dir, normal=True, depth=True, albedo=True):
     context.scene.render.image_settings.color_depth = '32'
     context.scene.render.filepath = pjoin(output_dir, 'result.exr')
     bpy.ops.render.render(write_still=True)
+
+class RENDER_OT_HIDE_OTHERS(Operator):
+    bl_label = 'Hide Others'
+    bl_idname = 'render.hide_others'
+    def execute(self, context):
+        for mesh in find_all(context, 'MESH'):
+            if mesh.select_get():
+                mesh.hide_render = False
+            else:
+                mesh.hide_render = True
+                
+        return {'FINISHED'}

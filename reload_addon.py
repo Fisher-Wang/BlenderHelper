@@ -10,7 +10,7 @@ import sys
 import shutil
 import zipfile
 
-ADDON_NAME = 'addon'
+ADDON_NAME = 'addon2'
 cur_dir = os.path.dirname(bpy.path.abspath(bpy.context.space_data.text.filepath))
 
 def zip_addon():

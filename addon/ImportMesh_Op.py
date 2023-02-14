@@ -1,4 +1,5 @@
 import bpy
+from bpy.types import Operator
 import os
 import shutil
 import math
@@ -46,13 +47,22 @@ def mesh_rescale_around_world_center(mesh, scale):
     mesh.measure.lenY *= scale
     mesh.measure.lenZ *= scale
 
+class MESH_OT_RESCALE(Operator):
+    bl_label = 'Rescale to 1'
+    bl_idname = 'mesh.rescale'
+    def execute(self, context):
+        mesh = context.object
+        maxLen = max(mesh.measure.lenX, mesh.measure.lenY)
+        mesh_rescale_around_world_center(mesh, 1/(maxLen/2))
+        return {'FINISHED'}
+
 def move_to_right_place(mesh):
     mesh_measure(mesh)
     move_to_center(mesh)
     maxLen = max(mesh.measure.lenX, mesh.measure.lenY)
     mesh_rescale_around_world_center(mesh, 1/(maxLen/2))
 
-class IMPORT_MESH_OT_ANY(bpy.types.Operator):
+class IMPORT_MESH_OT_ANY(Operator):
     bl_label = 'Import Mesh of any Type'
     bl_idname = 'import_mesh.any'
     def execute(self, context):

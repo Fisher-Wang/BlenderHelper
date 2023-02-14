@@ -26,6 +26,6 @@ class MESH_OT_MEASURE(bpy.types.Operator):
     bl_label = 'Measure'
     bl_idname = 'mesh.measure'
     def execute(self, context):
-        mesh = find_all(context, 'MESH')[0]
+        mesh = context.object
         mesh_measure(mesh)
         return {'FINISHED'}
