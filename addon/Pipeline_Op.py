@@ -106,11 +106,13 @@ class RENDER_OT_PIPELINE(Operator):
         material_types = []
         for key, value in conf['materials'].items():
             material_types += [key] * value
-        
+        shape_names = conf['shape_names']
+        if context.scene.start_shape is not None:
+            shape_names = shape_names[context.scene.start_shape: context.scene.end_shape]
         pipeline(
             mesh_dir=bpy.path.abspath(context.scene.mesh_dir),
             output_base_dir=bpy.path.abspath(context.scene.output_base_dir),
-            mesh_names=conf['shape_names'],
+            mesh_names=shape_names,
             material_types=material_types,
         )
         return {'FINISHED'}

@@ -16,11 +16,9 @@ class HELPER_PT_OUTPUT(Panel):
         row.operator('scene.export_normal')
         row = layout.row()
         row.operator('scene.export_image', text='Image')
-        ## TODO: implement this
         row = layout.row()
         row.operator('scene.export_image', text='Image w/o Shadow')
         row = layout.row()
         row.operator('scene.export_albedo')
-        ## TODO: implement this
         row = layout.row()
         row.operator('scene.export_image', text='Camera Mat')
