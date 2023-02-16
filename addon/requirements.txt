@@ -1,0 +1,7 @@
+numpy
+OpenEXR
+skimage
+matplotlib
+Pillow
+opencv-python
+pyyaml

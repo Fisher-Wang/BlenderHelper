@@ -3,6 +3,7 @@ import numpy as np
 import yaml
 from bpy.types import Operator
 from os.path import join as pjoin
+from os.path import exists as pexists
 from .utils import *
 from .ImportMesh_Op import *
 from .Camera_Op import *
@@ -57,8 +58,14 @@ def pipeline(mesh_dir, output_base_dir, mesh_names, material_types):
     context = bpy.context
     for mesh_name in mesh_names:
         for i, material_type in enumerate(material_types):
-            for scale, angle in product([0.5, 1, 2], range(0, 360, 360//5)):
-                output_dir = mkdir(pjoin(output_base_dir, f'{mesh_name}_{i+1}_{material_type.lower()}_{scale}_{angle}'))
+            for scale, angle in product([0.5, 1, 2], range(0, 360, 360//1)):
+                o = f'{mesh_name}_{i+1}_{material_type.lower()}_{scale}_{angle}'
+                output_dir = mkdir(pjoin(output_base_dir, o))
+                
+                if pexists(pjoin(output_dir, f'{context.scene.num_light:03d}.exr')):
+                    print(f'[INFO] Skipping {o}')
+                    continue
+                
                 print(mesh_name, output_dir)
                 
                 ## Clear
