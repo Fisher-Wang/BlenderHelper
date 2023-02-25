@@ -114,11 +114,15 @@ if  __name__ =="__main__":
     parser.add_argument('--num_light', '-n', required=True, type=int)
     parser.add_argument('--mode', '-m', choices=['standard', 'random'], default='random')
     parser.add_argument('--over_expose', choices=['clip', 'normalize'], default='clip')
+    parser.add_argument('--start', '-s', type=int)
+    parser.add_argument('--end', '-e', type=int)
     args = parser.parse_args()
     
     conf = read_yaml(args.conf)
     output_dir = args.output_dir if args.output_dir else args.dataset_dir.strip(os.sep) + '_png'
     shape_names = conf['shape_names']
+    if args.start is not None:
+        shape_names = shape_names[args.start:args.end]
     material_types = []
     for key, value in conf['materials'].items():
         material_types += [key] * value
