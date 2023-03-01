@@ -4,7 +4,7 @@ from utils import write_txt, read_yaml, make_even_stops
 
 blender = 'blender3'
 mesh_dir = 'plane'
-result_dir = 'result_20230216'
+result_dir = 'result_20230226_uniform'
 conf = 'template_new.yaml'
 nLight = 100
 nProcess = 8

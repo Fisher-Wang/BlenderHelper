@@ -87,20 +87,22 @@ def pipeline(mesh_dir, output_base_dir, params):
         trans_rotate(mesh, angle)
         trans_scale_z(mesh, scale)
         
-        ## Split Mesh
-        print('Splitting Object')
-        select_one(context, mesh)
-        split(mesh)
+        # ## Split Mesh
+        # print('Splitting Object')
+        # select_one(context, mesh)
+        # split(mesh)
         
-        ## Attach Material
-        meshes = find_all(context, 'MESH')
-        all_material_params = {}
-        for mesh in meshes:
-            material, material_params = assign_random_material(material_type)
-            mesh.data.materials.append(material)
-            all_material_params[mesh.name] = material_params
+        # ## Attach Material
+        # meshes = find_all(context, 'MESH')
+        # all_material_params = {}
+        # for mesh in meshes:
+        #     material, material_params = assign_random_material(material_type)
+        #     mesh.data.materials.append(material)
+        #     all_material_params[mesh.name] = material_params
         
-        write_yaml(pjoin(output_dir, 'material_params.yaml'), all_material_params)
+        # write_yaml(pjoin(output_dir, 'material_params.yaml'), all_material_params)
+        material, material_params = assign_random_material(material_type)
+        mesh.data.materials.append(material)
         
         ## Render Normal Map
         get_all(context, output_dir, name='result_normal', normal=True)
