@@ -29,3 +29,8 @@ class HELPER_PT_CAMERA_POSE(CAMERA_BASE, Panel):
         row.prop(context.scene, 'camera_theta')
         row = layout.row()
         row.operator('camera.set_position')
+        row = layout.row()
+        row.operator('camera.set_position_from_matrix')
+        
+        row = layout.row()
+        row.prop(context.scene, 'RT_text')

@@ -4,6 +4,7 @@ __pycache__/
 result_*/
 data/
 
+*.json
 *.yaml
 *.png
 *.exr
@@ -19,4 +20,5 @@ data/
 *.blend
 *.blend1
 *.mat
+*.npy
 *.pdf

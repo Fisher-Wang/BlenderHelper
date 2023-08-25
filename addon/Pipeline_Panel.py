@@ -12,3 +12,5 @@ class HELPER_PT_PIPELINE(Panel):
         layout = self.layout
         row = layout.row()
         row.operator('render.pipeline')
+        row = layout.row()
+        row.operator('render.pipeline_colorpsnerf')

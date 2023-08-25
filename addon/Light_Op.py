@@ -17,8 +17,8 @@ def create_light_base(context, energy, type):
     context.collection.objects.link(light)
     return light
 
-def create_light_sun(context):
-    return create_light_base(context, energy=1, type='SUN')
+def create_light(context, type='SUN', energy=1):
+    return create_light_base(context, energy, type)
 
 def set_light_direction(light, theta, phi):
     location = phi_theta_to_xyz(phi, theta)
@@ -35,7 +35,7 @@ class RENDER_OT_SET_LIGHT_DIRECTION(Operator):
         if lights:
             light = lights[0]
         else:
-            light = create_light_sun(context)
+            light = create_light(context)
         set_light_direction(light, context.scene.theta, context.scene.phi)
         return {'FINISHED'}
 
@@ -43,7 +43,7 @@ def multi_light(context, num_light=3):
     delete_all(context, ['LIGHT'])
     ls = []
     for i in range(num_light):
-        light = create_light_sun(context)
+        light = create_light(context)
         ld = set_light_direction(light, 360 / num_light * i, 45)
         li = light.data.energy
         lc = light.data.color
@@ -112,7 +112,7 @@ def generate_lights(num_light, phi_min, phi_max, sample_min=10, sample_max=5000)
 
 def render_lighting(context, num_light, phi_min, phi_max, output_dir):    
     delete_all(context, ['LIGHT'])
-    light = create_light_sun(context)
+    light = create_light(context)
     lds = generate_lights(num_light, phi_min, phi_max)
     for i, ld in enumerate(lds):
         light.location = ld * 12

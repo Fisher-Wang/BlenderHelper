@@ -49,16 +49,6 @@ class SCENE_OT_EXPORT_IMAGE(Operator):
         convert_all(output_dir, output_dir)
         return {'FINISHED'}
 
-def get_albedo(context, output_dir):
-    context.scene.view_layers["ViewLayer"].use_pass_diffuse_color = True
-    
-    context.scene.render.image_settings.file_format = 'OPEN_EXR_MULTILAYER'
-    context.scene.render.image_settings.color_depth = '32'
-    context.scene.render.filepath = pjoin(output_dir, 'result_albedo.exr')
-    bpy.ops.render.render(write_still=True)
-    
-    context.scene.view_layers["ViewLayer"].use_pass_diffuse_color = False
-
 class SCENE_OT_EXPORT_ALBEDO(Operator):
     bl_label = 'Albedo'
     bl_idname = 'scene.export_albedo'
@@ -68,7 +58,7 @@ class SCENE_OT_EXPORT_ALBEDO(Operator):
         convert_all(output_dir, output_dir)
         return {'FINISHED'}
 
-def get_all(context, output_dir, name='result', normal=False, depth=False, albedo=False, combined=False):
+def get_all(context, output_dir, name='result', normal=False, depth=False, albedo=False, combined=False, shadow=False):
     old_color = context.scene.world.color
     old_engine = context.scene.render.engine
     
@@ -78,7 +68,8 @@ def get_all(context, output_dir, name='result', normal=False, depth=False, albed
     context.scene.view_layers[VIEW_LAYER_NAME].use_pass_z = depth
     context.scene.view_layers[VIEW_LAYER_NAME].use_pass_normal = normal
     context.scene.view_layers[VIEW_LAYER_NAME].use_pass_diffuse_color = albedo
-    
+    context.scene.view_layers[VIEW_LAYER_NAME].use_pass_shadow = shadow
+
     ## WARN: Do not use PNG/TIFF if you want linear image!!!
     ## Choice 1: PNG
     # context.scene.render.image_settings.file_format = 'PNG'
