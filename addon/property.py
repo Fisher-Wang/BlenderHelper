@@ -164,3 +164,18 @@ def declare_properies():
     bpy.types.Scene.RT_text = StringProperty(
         name='RT',
     )
+    
+    ## CircularLights
+    bpy.types.Scene.circular_phi = FloatProperty(
+        name='Angle of pitch',
+        default=45,
+        min=0,
+        max=90,
+        description='Angle of pitch'
+    )
+    bpy.types.Scene.num_circular_lights = IntProperty(
+        name='Number of lights',
+        default=3,
+        min=1,
+        description='Number of Lights'
+    )

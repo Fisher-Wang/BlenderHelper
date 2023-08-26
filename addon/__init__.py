@@ -26,59 +26,64 @@ import bpy
 
 from .ImportMesh_Op import *
 from .ImportMesh_Panel import *
-from .MeshMeasure_Op import *
-from .Camera_Op import *
-from .Camera_Panel import *
-from .AnimationControl_Panel import *
+# from .MeshMeasure_Op import *
+# from .Camera_Op import *
+# from .Camera_Panel import *
+# from .AnimationControl_Panel import *
 from .Output_Op import *
 from .Output_Panel import *
-from .Light_Op import *
-from .Light_Panel import *
+# from .Light_Op import *
+# from .Light_Panel import *
+from .CircularLight_Op import *
+from .CircularLight_Panel import *
 from .Pipeline_Op import *
 from .Pipeline_Panel import *
 from .Setting_Panel import *
-from .ImagePlane_Op import *
-from .ImagePlane_Panel import *
-from .Transform_Op import *
-from .Transform_Panel import *
+# from .ImagePlane_Op import *
+# from .ImagePlane_Panel import *
+# from .Transform_Op import *
+# from .Transform_Panel import *
 from .property import *
 
 classes = (
     IMPORT_MESH_OT_ANY, 
-    MESH_OT_RESCALE,
-    MESH_OT_MEASURE,
+    # MESH_OT_RESCALE,
+    # MESH_OT_MEASURE,
     HELPER_PT_IMPORT_MESH,
     
-    MESH_OT_SET_ORIGIN,
-    MESH_OT_RESET,
-    MESH_OT_SET,
-    HELPER_PT_TRANSFORM,
+    # MESH_OT_SET_ORIGIN,
+    # MESH_OT_RESET,
+    # MESH_OT_SET,
+    # HELPER_PT_TRANSFORM,
     
-    SCENE_OT_IMPORT_IMAGE_PLANE,
-    SCENE_OT_SWITCH_VISIBILITY,
-    HELPER_PT_IMPORT_PLANE_IMAGE,
+    # SCENE_OT_IMPORT_IMAGE_PLANE,
+    # SCENE_OT_SWITCH_VISIBILITY,
+    # HELPER_PT_IMPORT_PLANE_IMAGE,
     
-    CAMERA_OT_ADD_ORTHOGRAPHIC,
-    CAMERA_OT_SET_POSITION,
-    CAMERA_OT_SET_POSITION_FROM_MATRIX,
-    HELPER_PT_CAMERA,
-    HELPER_PT_CAMERA_POSE,
+    # CAMERA_OT_ADD_ORTHOGRAPHIC,
+    # CAMERA_OT_SET_POSITION,
+    # CAMERA_OT_SET_POSITION_FROM_MATRIX,
+    # HELPER_PT_CAMERA,
+    # HELPER_PT_CAMERA_POSE,
     
-    HELPER_PT_ANIMATION_CONTROL,
+    # HELPER_PT_ANIMATION_CONTROL,
     
-    RENDER_OT_SET_LIGHT_DIRECTION,
-    RENDER_OT_MULTI_LIGHT,
-    HELPER_PT_LIGHT,
+    # RENDER_OT_SET_LIGHT_DIRECTION,
+    # RENDER_OT_MULTI_LIGHT,
+    # HELPER_PT_LIGHT,
     
-    RENDER_OT_HIDE_OTHERS,
-    SCENE_OT_EXPORT_NORMAL,
+    HELPER_PT_CIRCULAR_LIGHT,
+    RENDER_OT_CIRCULAR_LIGHT,
+    
+    # RENDER_OT_HIDE_OTHERS,
+    # SCENE_OT_EXPORT_NORMAL,
     SCENE_OT_EXPORT_IMAGE,
-    SCENE_OT_EXPORT_ALBEDO,
+    # SCENE_OT_EXPORT_ALBEDO,
     HELPER_PT_OUTPUT,
     
     RENDER_OT_PIPELINE,
     HELPER_PT_PIPELINE,
-    RENDER_OT_PIPELINE_COLORPSNERF,
+    # RENDER_OT_PIPELINE_COLORPSNERF,
     
     HELPER_PT_RENDER_SETTING,
 
