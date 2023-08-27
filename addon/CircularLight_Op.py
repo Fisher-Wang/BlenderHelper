@@ -7,7 +7,7 @@ from .utils import *
 from .Output_Op import get_all
 from .Light_Op import create_light, set_light_direction
 from .ImportMesh_Op import import_mesh, move_to_right_place
-from .exr2png import convert_all
+# from .exr2png import convert_all
 from .Camera_Op import add_orthographic_camera
 from .MeshMeasure_Op import mesh_measure
 
@@ -38,15 +38,20 @@ def pipeline_circular_light(context: bpy.context, **kargs):
     input_dir: str = kargs['input_dir']
     output_base_dir: str = kargs['output_dir']
     
+    ## Configs Iodo(rjj):set light get!
     context.scene.render.resolution_x = 400
     context.scene.render.resolution_y = 400
-    phi_min = 10
-    phi_max = 60
-    phi_nums = 6
-    num_lights = 10
-    
+    phi_min = 5
+    phi_max = 90
+    phi_nums = 40   # delta phi 2 [min,max]
+    num_lights = 72 # delta theta 5
+    ###-------Light Setting---------###
+
+
+    ###-------Path Setting---------###
     objs = os.listdir(input_dir)
 
+    # iterations
     phis = np.linspace(phi_min, phi_max, phi_nums)
     thetas = np.linspace(0, 360, num_lights, endpoint=False)
     
@@ -64,13 +69,15 @@ def pipeline_circular_light(context: bpy.context, **kargs):
         delete_all(context, ['CAMERA'])
         add_orthographic_camera(context)
         
+        get_all(context, output_obj_dir, 'result', normal=True)
+        # convert_all(output_obj_dir, output_obj_dir, 'result', delete_exr=True)
         for phi in phis:
             for theta in thetas:
                 light.location = phi_theta_to_xyz(phi, theta)
                 set_direction_to(light)
                 name = f'phi={phi:.1f}_theta={theta:.1f}'
-                get_all(context, output_obj_dir, name)
-                convert_all(output_obj_dir, output_obj_dir, name, delete_exr=True)
+                get_all(context, output_obj_dir, name, combined=True)
+                # convert_all(output_obj_dir, output_obj_dir, name, delete_exr=True)
 
 class RENDER_OT_PIPELINE_CIRCULAR_LIGHT(Operator):
     bl_idname = 'render.pipeline_circular_light'

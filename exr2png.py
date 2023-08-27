@@ -1,18 +1,21 @@
 import OpenEXR
 import Imath
-import sys, os, shutil
 import scipy.io as scio
 import numpy as np
-from matplotlib import pyplot as plt
 import argparse
+import os
 from os.path import join as pjoin
 from skimage import io, img_as_bool
-import yaml
 from PIL import Image
+from matplotlib import cm
+import matplotlib.pyplot as plt
 import cv2
-from glob import glob
-from itertools import product
-from utils import *
+from utils import read_json
+
+view_layer_name = 'ViewLayer'
+
+def nmap_for_show(nmap):
+    return ((nmap+1) / 2 * 255).astype('uint8')
 
 def split_channel(f, channel, float_flag=True):
     dw = f.header()['dataWindow']
@@ -36,21 +39,18 @@ def get_channels_size(exr_path):
     f.close()
     return channels, size
 
+def save_binary_image(fname, binary_image):
+    img = Image.fromarray(img_as_bool(binary_image))
+    img.save(fname, bits=1)
+
 def normalize(arr):
     norm = np.linalg.norm(arr, axis=-1)
     valid = norm != 0
     arr[valid] = arr[valid] / norm[valid][..., None]
     return arr
 
-def main(args, src_dir, dst_dir, num_light=1000):
-    if args.blender_version == '3':
-        view_layer_name = 'ViewLayer'
-    elif args.blender_version == '2':
-        view_layer_name = 'View Layer'
-    else:
-        raise ValueError('Bad blender version!')
-    
-    input_exr_path = pjoin(src_dir, 'result_normal.exr')
+def main(src_dir, dst_dir):
+    input_exr_path = pjoin(src_dir, 'result_normal_depth.exr')
     output_nmap_path = pjoin(dst_dir, 'Normal_gt.mat')
     output_nmap_png_path = pjoin(dst_dir, 'Normal_gt.png')
     output_mask_path = pjoin(dst_dir, 'mask.png')
@@ -62,91 +62,161 @@ def main(args, src_dir, dst_dir, num_light=1000):
     normal[..., 1] = channels[f'{view_layer_name}.Normal.Y']
     normal[..., 2] = channels[f'{view_layer_name}.Normal.Z']
     normal = normalize(normal)
-    print(normal.min(), normal.max())
-    io.imsave(output_nmap_png_path, nmap_for_show(normal))
-    scio.savemat(output_nmap_path, {'Normal_gt': normal})
 
     ## Mask
     mask = ~np.all(normal == 0, axis=-1)
-    write_mask(output_mask_path, mask)
+    save_binary_image(output_mask_path, mask)
     
-    ## Light Intensities
-    ones = np.ones((num_light, 3), dtype=int)
-    np.savetxt(pjoin(dst_dir, 'light_intensities.txt'), ones)
+    ## Convert World to Camera
+    RT = np.loadtxt(pjoin(src_dir, 'camera_RT.txt'))
+    R = RT[:, :3]
+    normal[mask] = normal[mask] @ R.T @ np.array(((1, 0, 0), (0, -1, 0), (0, 0, -1)))
     
-    ## Filenames
-    filenames = [f'{i:03d}.png' for i in range(1, num_light+1)]
-    with open(pjoin(dst_dir, 'filenames.txt'), 'w+') as f:
-        f.write('\n'.join(filenames))
+    ## Save Normal
+    print(normal.min(), normal.max())
+    io.imsave(output_nmap_png_path, nmap_for_show(normal))
+    scio.savemat(output_nmap_path, {'Normal_gt': normal})
     
-    ## Images
-    if not args.no_png:
-        imgs = np.zeros((num_light, h, w, 3))
-        for i in range(num_light):
-            channels, (h, w) = get_channels_size(pjoin(src_dir, f'{i+1:03d}.exr'))
-            imgs[i, :, :, 0] = channels[f'{view_layer_name}.Combined.R']
-            imgs[i, :, :, 1] = channels[f'{view_layer_name}.Combined.G']
-            imgs[i, :, :, 2] = channels[f'{view_layer_name}.Combined.B']
+    ## Depth
+    # TODO: mesh are not in same size, maybe convert into pixel unit in order to unify them
+    depth = channels[f'{view_layer_name}.Depth.Z'].copy()
+    valid = depth != 1e10
+    depth[~valid] = np.nan
+    depth[~mask] = np.nan
+    depth = -depth
+    depth -= np.nanmin(depth)  # TODO: use common depth stantard?
+    np.save(pjoin(dst_dir, 'Depth.npy'), depth)
+    
+    ## Depth Preview
+    cmap = cm.get_cmap("jet").copy()
+    cmap.set_bad(color='white')
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1)
+    plt.imshow(depth, cmap=cmap)
+    plt.colorbar()
+    ax.get_xaxis().set_ticks([])
+    ax.get_yaxis().set_ticks([])
+    fig.savefig(pjoin(dst_dir, 'Depth_colorbar.png'), dpi=300, bbox_inches='tight')
+    plt.close('all')
+    
+    norm = plt.Normalize(vmin=np.nanmin(depth), vmax=np.nanmax(depth))
+    img = cmap(norm(depth))
+    plt.imsave(pjoin(dst_dir, 'Depth.png'), img)
 
-        if args.over_expose == 'normalize':
-            imgs = imgs / imgs.max()
-        elif args.over_expose == 'clip':
-            imgs[imgs > 1] = 1
-        else:
-            raise
-        
-        imgs = imgs[..., ::-1]  # RGB to BGR
-        
-        for i in range(num_light):
-            cv2.imwrite(pjoin(dst_dir, f'{i+1:03d}.png'), (imgs[i]*65535).astype('uint16'))
+def convert_all(src_dir, dst_dir, name='result', delete_exr=False):
+    src_path = pjoin(src_dir, f'{name}.exr')
+    channels, (h, w) = get_channels_size(src_path)
+    print('[INFO] channel keys:', channels.keys())
     
-    ## Material Params & light directions
-    if pexists(pjoin(src_dir, 'material_params.yaml')):
-        shutil.copy(pjoin(src_dir, 'material_params.yaml'), pjoin(dst_dir, 'material_params.yaml'))
-    shutil.copy(pjoin(src_dir, 'light_directions.txt'), pjoin(dst_dir, 'light_directions.txt'))
+    ## Image
+    if f'{view_layer_name}.Combined.R' in channels.keys():
+        img = np.zeros((h, w, 3))
+        img[:, :, 0] = channels[f'{view_layer_name}.Combined.R']
+        img[:, :, 1] = channels[f'{view_layer_name}.Combined.G']
+        img[:, :, 2] = channels[f'{view_layer_name}.Combined.B']
+        img = img / img.max()  # XXX: just for preview
+        
+        np.save(pjoin(dst_dir, f'{name}_image.npy'), img)
+        
+        img = img[..., ::-1]  # RGB to BGR
+        cv2.imwrite(pjoin(dst_dir, f'{name}_image.png'), (img*65535).astype('uint16'), [cv2.IMWRITE_PNG_COMPRESSION, 9])
+    
+    ## Normal & Mask
+    if f'{view_layer_name}.Normal.X' in channels.keys():
+        normal = np.zeros((h, w, 3))
+        normal[..., 0] = channels[f'{view_layer_name}.Normal.X']
+        normal[..., 1] = channels[f'{view_layer_name}.Normal.Y']
+        normal[..., 2] = channels[f'{view_layer_name}.Normal.Z']
+        normal = normalize(normal)
+        
+        ## Mask
+        mask = ~np.all(normal == 0, axis=-1)
+        save_binary_image(pjoin(dst_dir, f'{name}_mask.png'), mask)
+
+        ## Convert World to Camera
+        # RT = np.array(read_json(pjoin(src_dir, 'camera.json'))['RT'])
+        # R = RT[:, :3]
+        # normal[mask] = normal[mask] @ R.T @ np.array(((1, 0, 0), (0, -1, 0), (0, 0, -1)))
+        
+        ## Save Normal
+        print(normal.min(), normal.max())
+        io.imsave(pjoin(dst_dir, f'{name}_normal.png'), nmap_for_show(normal))
+        np.save(pjoin(dst_dir, f'{name}_normal.npy'), normal)
+        # scio.savemat(pjoin(dst_dir, 'Normal_gt.mat'), {'Normal_gt': normal})
+        
+    ## Depth
+    if f'{view_layer_name}.Depth.Z' in channels.keys():
+        ## Depth
+        # TODO: mesh are not in same size, maybe convert into pixel unit in order to unify them
+        depth = channels[f'{view_layer_name}.Depth.Z'].copy()
+        valid = depth != 1e10
+        depth[~valid] = np.nan
+        depth[~mask] = np.nan
+        np.save(pjoin(dst_dir, 'Depth.npy'), depth)
+        
+        ## Depth Preview
+        depth = -depth
+        depth -= np.nanmin(depth)  # TODO: use common depth stantard?
+        
+        cmap = cm.get_cmap("jet").copy()
+        cmap.set_bad(color='white')
+        fig = plt.figure()
+        ax = fig.add_subplot(1, 1, 1)
+        plt.imshow(depth, cmap=cmap)
+        plt.colorbar()
+        ax.get_xaxis().set_ticks([])
+        ax.get_yaxis().set_ticks([])
+        fig.savefig(pjoin(dst_dir, 'Depth_colorbar.png'), dpi=300, bbox_inches='tight')
+        plt.close('all')
+        
+        norm = plt.Normalize(vmin=np.nanmin(depth), vmax=np.nanmax(depth))
+        img = cmap(norm(depth))
+        plt.imsave(pjoin(dst_dir, 'Depth.png'), img)
+
+    ## Albedo
+    if f'{view_layer_name}.DiffCol.R' in channels.keys():
+        img = np.zeros((h, w, 3))
+        img[:, :, 0] = channels[f'{view_layer_name}.DiffCol.R']
+        img[:, :, 1] = channels[f'{view_layer_name}.DiffCol.G']
+        img[:, :, 2] = channels[f'{view_layer_name}.DiffCol.B']
+        np.save(pjoin(dst_dir, 'albedo.npy'), img)
+        
+        img = img / img.max()  # XXX: just for preview
+        img = img[..., ::-1]  # RGB to BGR
+        cv2.imwrite(pjoin(dst_dir, 'preview_albedo.png'), (img*65535).astype('uint16'), [cv2.IMWRITE_PNG_COMPRESSION, 9])
+    
+    ## Shadow
+    if f'{view_layer_name}.Shadow.R' in channels.keys():
+        shadow = channels[f'{view_layer_name}.Shadow.R']
+        shadow = img_as_bool(shadow)
+        save_binary_image(pjoin(dst_dir, 'shadow.png'), shadow)
+        np.save(pjoin(dst_dir, 'shadow.npy'), shadow)
+    
+    if delete_exr:
+        os.remove(src_path)
 
 if  __name__ =="__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dataset_dir', '-d', required=True)
-    parser.add_argument('--output_dir', '-o')
     parser.add_argument('--blender_version', '-b', default='3', choices=['3', '2'])
-    parser.add_argument('--no_png', action='store_true')
-    parser.add_argument('--conf', '-c', default='conf_template.yaml')
-    parser.add_argument('--num_light', '-n', required=True, type=int)
-    parser.add_argument('--mode', '-m', choices=['standard', 'random'], default='random')
-    parser.add_argument('--over_expose', choices=['clip', 'normalize'], default='clip')
-    parser.add_argument('--start', '-s', type=int)
-    parser.add_argument('--end', '-e', type=int)
+    parser.add_argument('--src_dir', help='All exr files in src_dir will be processed')
+    parser.add_argument('--dst_dir', help='The processed images are stored in dst_dir. If not specified, dst_dir would be same as src_dir')
+    parser.add_argument('--path', help='Specefy a single exr file. When using this argument, src_dir and dst_dir are not used.')
     args = parser.parse_args()
+    if args.blender_version == '2':
+        view_layer_name = 'View Layer'
+    # Iodo(rjj): usage eg: E:/TomRen/software/python310/python.exe 
+    # .\exr2png.py 
+    # --src_dir C:\Users\robot\Desktop\dynamic-mvpsrenderer-CircularLights\data\result\test 
+    # --dst_dir C:\Users\robot\Desktop\dynamic-mvpsrenderer-CircularLights\data\result\test_png
     
-    conf = read_yaml(args.conf)
-    output_dir = args.output_dir if args.output_dir else args.dataset_dir.strip(os.sep) + '_png'
-    shape_names = conf['shape_names']
-    if args.start is not None:
-        shape_names = shape_names[args.start:args.end]
-    material_types = []
-    for key, value in conf['materials'].items():
-        material_types += [key] * value
-    scales = conf['scale']
-    nrot = conf['nrot']
-    angles = (np.arange(nrot) / nrot * 360).astype(int)
-    objs = [f'{s}_{i+1}_{m.lower()}_{scale}_{angle}' \
-                for s in shape_names \
-                for i, m in enumerate(material_types)\
-                for scale, angle in product(scales, angles)]
-    
-    unfinished = []
-    for o in objs:
-        src_dir = pjoin(args.dataset_dir, o)
-        dst_dir = pjoin(output_dir, o)
-        if not (pexists(src_dir) and pexists(pjoin(src_dir, f'{args.num_light:03d}.exr'))):
-            print(f'[WARN] No src files, Skipping {o}')
-            unfinished.append(o)
-            continue
-        if pexists(pjoin(dst_dir, f'{args.num_light:03d}.png')):
-            print(f'[INFO] Skipping {o}')
-            continue
-        print(f'Processing {o}')
-        mkdir(dst_dir)
-        main(args, src_dir, dst_dir, num_light=args.num_light)
-    write_txt('unfinished.txt', unfinished)
+    if args.src_dir:
+        src_dir = args.src_dir
+        dst_dir = args.dst_dir if args.dst_dir else src_dir
+        os.makedirs(dst_dir, exist_ok=True)
+        filenames = [filename for filename in os.listdir(src_dir) if filename.endswith('.exr')]
+        for filename in filenames:
+            convert_all(src_dir, dst_dir, name=filename.removesuffix('.exr'))
+
+    if args.path:
+        src_dir, filename = os.path.split(args.path)
+        convert_all(src_dir, src_dir, name=filename.removesuffix('.exr'))

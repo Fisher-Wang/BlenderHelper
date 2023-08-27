@@ -96,15 +96,6 @@ class ArgumentParserForBlender(argparse.ArgumentParser):
 
 def parse_args():
     parser = ArgumentParserForBlender()
-    parser.add_argument('--id', '-i', required=True)
-    parser.add_argument('--num_light', '-n', type=int, required=True)
-    parser.add_argument('--conf', '-c', type=str, required=True)
-    parser.add_argument('--result_dir', '-r', type=str, required=True)
-    parser.add_argument('--mode', '-m', choices=['standard', 'random', 'mix'], default='mix')
-    parser.add_argument('--start_shape', '-s', type=int)
-    parser.add_argument('--end_shape', '-e', type=int)
-    parser.add_argument('--mesh_dir', required=True)
-    parser.add_argument('--no_mail', action='store_true')
     args = parser.parse_args()
     return args
 
@@ -112,26 +103,22 @@ def main_gui():
     pass
 
 def main_cmd():
-    activate_gpu()
+    # activate_gpu()
     args = parse_args()
 
     scene = bpy.context.scene
-    scene.num_light = args.num_light
-    scene.yaml_config_path = args.conf
-    scene.output_base_dir = args.result_dir
-    scene.mesh_dir = args.mesh_dir
-    scene.start_shape = args.start_shape
-    scene.end_shape = args.end_shape
+    # customrize the path Iodo(rjj):set path
+    scene.mesh_dir = '/home/tomren/tr/blender/blender-3.3.0-linux-x64/works/dynamic-mvpsrenderer/data/mesh'
+    scene.output_dir = '/home/tomren/tr/blender/blender-3.3.0-linux-x64/works/dynamic-mvpsrenderer/data/imgs'
     
     scene.render.engine = 'CYCLES'
     scene.render.resolution_x = 400
     scene.render.resolution_y = 400
     scene.render.image_settings.color_mode = 'RGB'
     scene.cycles.max_bounces = 12
-    scene.num_light = 100
     bpy.data.worlds["World"].node_tree.nodes["Background"].inputs[0].default_value = (0, 0, 0, 1)
     
-    bpy.ops.render.pipeline()
+    bpy.ops.render.pipeline_circular_light()
 
 if __name__ == '__main__':    
     bpy.ops.preferences.addon_enable(module='addon2')  ## XXX: addon name

@@ -129,18 +129,18 @@ def convert_all(src_dir, dst_dir, name='result', delete_exr=False):
         
         ## Mask
         mask = ~np.all(normal == 0, axis=-1)
-        save_binary_image(pjoin(dst_dir, 'mask.png'), mask)
+        save_binary_image(pjoin(dst_dir, f'{name}_mask.png'), mask)
 
         ## Convert World to Camera
-        RT = np.array(read_json(pjoin(src_dir, 'camera.json'))['RT'])
-        R = RT[:, :3]
-        normal[mask] = normal[mask] @ R.T @ np.array(((1, 0, 0), (0, -1, 0), (0, 0, -1)))
+        # RT = np.array(read_json(pjoin(src_dir, 'camera.json'))['RT'])
+        # R = RT[:, :3]
+        # normal[mask] = normal[mask] @ R.T @ np.array(((1, 0, 0), (0, -1, 0), (0, 0, -1)))
         
         ## Save Normal
         print(normal.min(), normal.max())
-        io.imsave(pjoin(dst_dir, 'Normal_gt.png'), nmap_for_show(normal))
-        np.save(pjoin(dst_dir, 'Normal_gt.npy'), normal)
-        scio.savemat(pjoin(dst_dir, 'Normal_gt.mat'), {'Normal_gt': normal})
+        io.imsave(pjoin(dst_dir, f'{name}_normal.png'), nmap_for_show(normal))
+        np.save(pjoin(dst_dir, f'{name}_normal.npy'), normal)
+        # scio.savemat(pjoin(dst_dir, 'Normal_gt.mat'), {'Normal_gt': normal})
         
     ## Depth
     if f'{view_layer_name}.Depth.Z' in channels.keys():
@@ -192,14 +192,3 @@ def convert_all(src_dir, dst_dir, name='result', delete_exr=False):
     
     if delete_exr:
         os.remove(src_path)
-
-if  __name__ =="__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--blender_version', '-b', default='3', choices=['3', '2'])
-    parser.add_argument('--dir', '-d', required=True)
-    args = parser.parse_args()
-    
-    if args.blender_version == '2':
-        view_layer_name = 'View Layer'
-    
-    main(args.dir, args.dir)
