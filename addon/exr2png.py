@@ -102,8 +102,9 @@ def main(src_dir, dst_dir):
     img = cmap(norm(depth))
     plt.imsave(pjoin(dst_dir, 'Depth.png'), img)
 
-def convert_all(src_dir, dst_dir):
-    channels, (h, w) = get_channels_size(pjoin(src_dir, 'result.exr'))
+def convert_all(src_dir, dst_dir, name='result', delete_exr=False):
+    src_path = pjoin(src_dir, f'{name}.exr')
+    channels, (h, w) = get_channels_size(src_path)
     
     ## Image
     if f'{view_layer_name}.Combined.R' in channels.keys():
@@ -113,10 +114,10 @@ def convert_all(src_dir, dst_dir):
         img[:, :, 2] = channels[f'{view_layer_name}.Combined.B']
         img = img / img.max()  # XXX: just for preview
         
-        np.save(pjoin(dst_dir, 'image.npy'), img)
+        np.save(pjoin(dst_dir, f'{name}_image.npy'), img)
         
         img = img[..., ::-1]  # RGB to BGR
-        cv2.imwrite(pjoin(dst_dir, 'image.png'), (img*65535).astype('uint16'), [cv2.IMWRITE_PNG_COMPRESSION, 9])
+        cv2.imwrite(pjoin(dst_dir, f'{name}_image.png'), (img*65535).astype('uint16'), [cv2.IMWRITE_PNG_COMPRESSION, 9])
     
     ## Normal & Mask
     if f'{view_layer_name}.Normal.X' in channels.keys():
@@ -188,6 +189,9 @@ def convert_all(src_dir, dst_dir):
         shadow = img_as_bool(shadow)
         save_binary_image(pjoin(dst_dir, 'shadow.png'), shadow)
         np.save(pjoin(dst_dir, 'shadow.npy'), shadow)
+    
+    if delete_exr:
+        os.remove(src_path)
 
 if  __name__ =="__main__":
     parser = argparse.ArgumentParser()

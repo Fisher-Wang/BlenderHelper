@@ -11,7 +11,7 @@ from .utils import *
 from .utils_debug import *
 from .MeshMeasure_Op import mesh_measure
 
-def import_mesh(path):
+def import_mesh(path: str):
     _, extension = os.path.splitext(path)
     if extension == '.ply':
         bpy.ops.import_mesh.ply(filepath=path)

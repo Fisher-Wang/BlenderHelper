@@ -27,8 +27,8 @@ import bpy
 from .ImportMesh_Op import *
 from .ImportMesh_Panel import *
 # from .MeshMeasure_Op import *
-# from .Camera_Op import *
-# from .Camera_Panel import *
+from .Camera_Op import *
+from .Camera_Panel import *
 # from .AnimationControl_Panel import *
 from .Output_Op import *
 from .Output_Panel import *
@@ -60,11 +60,11 @@ classes = (
     # SCENE_OT_SWITCH_VISIBILITY,
     # HELPER_PT_IMPORT_PLANE_IMAGE,
     
-    # CAMERA_OT_ADD_ORTHOGRAPHIC,
-    # CAMERA_OT_SET_POSITION,
-    # CAMERA_OT_SET_POSITION_FROM_MATRIX,
-    # HELPER_PT_CAMERA,
-    # HELPER_PT_CAMERA_POSE,
+    CAMERA_OT_ADD_ORTHOGRAPHIC,
+    CAMERA_OT_SET_POSITION,
+    CAMERA_OT_SET_POSITION_FROM_MATRIX,
+    HELPER_PT_CAMERA,
+    HELPER_PT_CAMERA_POSE,
     
     # HELPER_PT_ANIMATION_CONTROL,
     
@@ -74,6 +74,7 @@ classes = (
     
     HELPER_PT_CIRCULAR_LIGHT,
     RENDER_OT_CIRCULAR_LIGHT,
+    RENDER_OT_PIPELINE_CIRCULAR_LIGHT,
     
     # RENDER_OT_HIDE_OTHERS,
     # SCENE_OT_EXPORT_NORMAL,
