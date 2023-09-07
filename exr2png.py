@@ -204,10 +204,6 @@ if  __name__ =="__main__":
     args = parser.parse_args()
     if args.blender_version == '2':
         view_layer_name = 'View Layer'
-    # Iodo(rjj): usage eg: E:/TomRen/software/python310/python.exe 
-    # .\exr2png.py 
-    # --src_dir C:\Users\robot\Desktop\dynamic-mvpsrenderer-CircularLights\data\result\test 
-    # --dst_dir C:\Users\robot\Desktop\dynamic-mvpsrenderer-CircularLights\data\result\test_png
     
     if args.src_dir:
         src_dir = args.src_dir
