@@ -179,3 +179,9 @@ def declare_properies():
         min=1,
         description='Number of Lights'
     )
+    bpy.types.Scene.conf_path = StringProperty(
+        name='Conf Path',
+        default='',
+        description='The path of configuration file',
+        subtype='FILE_PATH'
+    )

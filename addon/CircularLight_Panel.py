@@ -22,3 +22,8 @@ class HELPER_PT_CIRCULAR_LIGHT(Panel):
         row.operator('render.set_circular_light', icon='SNAP_NORMAL')
         row = layout.row()
         row.operator('render.pipeline_circular_light', icon='SNAP_NORMAL')
+        
+        row = layout.row()
+        row.prop(context.scene, 'conf_path')
+        row = layout.row()
+        row.operator('render.pipeline_circular_light_2', icon='SNAP_NORMAL')

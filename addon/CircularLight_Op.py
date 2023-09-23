@@ -1,13 +1,14 @@
 import bpy
 import math
 import numpy as np
+from typing import List, Dict
 from bpy.types import Operator
 from os.path import join as pjoin
 from .utils import *
 from .Output_Op import get_all
 from .Light_Op import create_light, set_light_direction
 from .ImportMesh_Op import import_mesh, move_to_right_place
-# from .exr2png import convert_all
+from .exr2png import convert_all
 from .Camera_Op import add_orthographic_camera
 from .MeshMeasure_Op import mesh_measure
 
@@ -79,10 +80,65 @@ def pipeline_circular_light(context: bpy.context, **kargs):
                 get_all(context, output_obj_dir, name, combined=True)
                 # convert_all(output_obj_dir, output_obj_dir, name, delete_exr=True)
 
+def pipeline_circular_light_2(context: bpy.context, **kargs):
+    input_dir: str = kargs['input_dir']
+    output_base_dir: str = kargs['output_dir']
+    conf_path: str = kargs['conf_path']
+    
+    conf = read_json(conf_path)
+    objs = os.listdir(input_dir)
+    light_sets: List[Dict[str, List[int]]] = conf['render']
+    numLights = conf['numLights']
+    assert numLights == len(light_sets)
+    
+    context.scene.render.resolution_x = 400
+    context.scene.render.resolution_y = 400
+    
+    for o in objs:
+        O = o.split('.')[0]
+        output_obj_dir = mkdir(pjoin(output_base_dir, O))
+        mesh_path = pjoin(input_dir, o)
+        import_mesh(mesh_path)
+        mesh = context.object
+        move_to_right_place(mesh)
+        mesh_measure(mesh)
+        delete_all(context, ['CAMERA'])
+        add_orthographic_camera(context)
+        
+        ## Normal
+        get_all(context, output_obj_dir, 'result', normal=True)
+        convert_all(output_obj_dir, output_obj_dir, 'result', delete_exr=True)
+        
+        ## Observed image with a lot of light set
+        for idx, light_set in enumerate(light_sets):
+            delete_all(context, ['LIGHT'])
+            
+            for light_id, color in light_set.items():
+                light_id = int(light_id)
+                light = create_light(context)
+                theta = light_id / numLights * 2 * math.pi
+                light.location.x = math.cos(theta) * conf['common']['radius']
+                light.location.y = math.sin(theta) * conf['common']['radius']
+                light.location.z = conf['common']['height']
+                light.data.color = color
+                set_direction_to(light)
+                
+            name = f'{idx:03d}'
+            get_all(context, output_obj_dir, name, combined=True)
+            convert_all(output_obj_dir, output_obj_dir, name, delete_exr=True)
+
 class RENDER_OT_PIPELINE_CIRCULAR_LIGHT(Operator):
     bl_idname = 'render.pipeline_circular_light'
     bl_label = 'Pipeline circular lights'
     
     def execute(self, context: bpy.context):
         pipeline_circular_light(context, input_dir=context.scene.mesh_dir, output_dir=context.scene.output_dir)
+        return {'FINISHED'}
+
+class RENDER_OT_PIPELINE_CIRCULAR_LIGHT_2(Operator):
+    bl_idname = 'render.pipeline_circular_light_2'
+    bl_label = 'Pipeline circular lights 2'
+    
+    def execute(self, context: bpy.context):
+        pipeline_circular_light_2(context, input_dir=context.scene.mesh_dir, output_dir=context.scene.output_dir, conf_path=bpy.path.abspath(context.scene.conf_path))
         return {'FINISHED'}
