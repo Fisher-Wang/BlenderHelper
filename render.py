@@ -103,7 +103,7 @@ def main_gui():
     pass
 
 def main_cmd():
-    # activate_gpu()
+    activate_gpu()
     args = parse_args()
 
     scene = bpy.context.scene
@@ -118,7 +118,7 @@ def main_cmd():
     scene.cycles.max_bounces = 12
     bpy.data.worlds["World"].node_tree.nodes["Background"].inputs[0].default_value = (0, 0, 0, 1)
     
-    bpy.ops.render.pipeline_circular_light()
+    bpy.ops.render.pipeline_circular_light_2()
 
 if __name__ == '__main__':    
     bpy.ops.preferences.addon_enable(module='addon2')  ## XXX: addon name

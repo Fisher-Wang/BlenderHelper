@@ -89,10 +89,6 @@ def pipeline_circular_light_2(context: bpy.context, **kargs):
     objs = os.listdir(input_dir)
     light_sets: List[Dict[str, List[int]]] = conf['render']
     numLights = conf['numLights']
-    assert numLights == len(light_sets)
-    
-    context.scene.render.resolution_x = 400
-    context.scene.render.resolution_y = 400
     
     for o in objs:
         O = o.split('.')[0]
