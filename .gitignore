@@ -6,6 +6,7 @@ data/
 
 *.yaml
 *.png
+*.exr
 *.ipynb
 *.sh
 *.txt

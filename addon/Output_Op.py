@@ -4,7 +4,7 @@ import subprocess
 from os.path import join as pjoin
 from .utils import *
 
-VIEW_LAYER_NAME = 'View Layer' if bpy.app.version_string.startswith('2.') else 'ViewLayer'
+VIEW_LAYER_NAME = 'ViewLayer'
 
 def get_normal_map(context, output_path):
     old_color = context.scene.world.color
@@ -12,6 +12,7 @@ def get_normal_map(context, output_path):
     
     context.scene.view_layers[VIEW_LAYER_NAME].use_pass_z = True
     context.scene.view_layers[VIEW_LAYER_NAME].use_pass_normal = True
+    context.scene.render.engine = 'CYCLES'
     context.scene.render.image_settings.file_format = 'OPEN_EXR_MULTILAYER'
     context.scene.render.image_settings.color_depth = '32'
     context.scene.render.filepath = output_path
@@ -26,9 +27,9 @@ class SCENE_OT_EXPORT_NORMAL(Operator):
     def execute(self, context):
         ## TODO: 为什么会闪退？？？
         get_normal_map(context, pjoin(context.scene.output_dir, 'Normal_gt.exr'))
-        # subprocess.run([
-        #     'python', 
-        #     'exr2png.py',
-        #     '-d', context.scene.output_dir
-        # ])
+        subprocess.run([
+            'python', 
+            pjoin(os.path.dirname(__file__), 'exr2png.py'),
+            '-d', context.scene.output_dir
+        ])
         return {'FINISHED'}
