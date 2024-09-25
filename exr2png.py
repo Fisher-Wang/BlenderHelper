@@ -4,7 +4,6 @@ import sys, os, shutil
 import scipy.io as scio
 import numpy as np
 from matplotlib import pyplot as plt
-from sklearn.preprocessing import normalize
 import argparse
 from os.path import join as pjoin
 from skimage import io, img_as_bool
@@ -13,13 +12,7 @@ from PIL import Image
 import cv2
 from glob import glob
 from itertools import product
-
-def mkdir(p, exist_ok=True):
-    os.makedirs(p, exist_ok=exist_ok)
-    return p
-
-def nmap_for_show(nmap):
-    return ((nmap+1) / 2 * 255).astype('uint8')
+from utils import *
 
 def split_channel(f, channel, float_flag=True):
     dw = f.header()['dataWindow']
@@ -42,10 +35,6 @@ def get_channels_size(exr_path):
         channels[channel_name] = split_channel(f, channel_name)
     f.close()
     return channels, size
-
-def save_binary_image(fname, binary_image):
-    img = Image.fromarray(img_as_bool(binary_image))
-    img.save(fname, bits=1)
 
 def normalize(arr):
     norm = np.linalg.norm(arr, axis=-1)
@@ -79,7 +68,7 @@ def main(args, src_dir, dst_dir, num_light=1000):
 
     ## Mask
     mask = ~np.all(normal == 0, axis=-1)
-    save_binary_image(output_mask_path, mask)
+    write_mask(output_mask_path, mask)
     
     ## Light Intensities
     ones = np.ones((num_light, 3), dtype=int)
@@ -109,7 +98,7 @@ def main(args, src_dir, dst_dir, num_light=1000):
         imgs = imgs[..., ::-1]  # RGB to BGR
         
         for i in range(num_light):
-            cv2.imwrite(pjoin(dst_dir, f'{i+1:03d}.png'), (imgs[i]*65535).astype('uint16'), [cv2.IMWRITE_PNG_COMPRESSION, 9])
+            cv2.imwrite(pjoin(dst_dir, f'{i+1:03d}.png'), (imgs[i]*65535).astype('uint16'))
     
     ## Material Params & light directions
     shutil.copy(pjoin(src_dir, 'material_params.yaml'), pjoin(dst_dir, 'material_params.yaml'))
@@ -118,7 +107,7 @@ def main(args, src_dir, dst_dir, num_light=1000):
 if  __name__ =="__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset_dir', '-d', required=True)
-    parser.add_argument('--output_dir', '-o', required=True)
+    parser.add_argument('--output_dir', '-o')
     parser.add_argument('--blender_version', '-b', default='3', choices=['3', '2'])
     parser.add_argument('--no_png', action='store_true')
     parser.add_argument('--conf', '-c', default='conf_template.yaml')
@@ -127,43 +116,32 @@ if  __name__ =="__main__":
     parser.add_argument('--over_expose', choices=['clip', 'normalize'], default='clip')
     args = parser.parse_args()
     
-    if args.mode == 'standard':
-        with open(args.conf) as f:
-            conf = yaml.load(f, yaml.FullLoader)
-            shape_names = conf['obj_names']
-            mat_names = conf['texture_names']
-        
-        for s in shape_names:
-            for m in mat_names:
-                for scale, angle in product([0.5, 1, 2], range(0, 360, 360//5)):
-                    o = f'{s}_{m.lower()}_{scale}_{angle}'
-                    src_dir = pjoin(args.dataset_dir, o)
-                    if not (os.path.exists(src_dir) and os.listdir(src_dir) and os.path.exists(pjoin(src_dir, '001.exr'))):
-                        print(f'skipped {o}')
-                        continue
-                    dst_dir = mkdir(pjoin(args.output_dir, o))
-                    print(f'processing {o}')
-                    main(args, src_dir, dst_dir, num_light=args.num_light)
-
-    elif args.mode == 'random':
-        with open(args.conf) as f:
-            conf = yaml.load(f, yaml.FullLoader)
-            shape_names = conf['shape_names']
-        material_types = []
-        for key, value in conf['materials'].items():
-            material_types += [key] * value
-        objs = [f'{s}_{i+1}_{m.lower()}_{scale}_{angle}' \
-                    for s in shape_names \
-                    for i, m in enumerate(material_types)\
-                    for scale, angle in product([0.5, 1, 2], range(0, 360, 360//5))]
-        for o in objs:
-            src_dir = pjoin(args.dataset_dir, o)
-            if not (os.path.exists(src_dir) and os.listdir(src_dir) and os.path.exists(pjoin(src_dir, '001.exr'))):
-                print(f'skipped {o}')
-                continue
-            dst_dir = mkdir(pjoin(args.output_dir, o))
-            print(f'processing {o}')
-            main(args, src_dir, dst_dir, num_light=args.num_light)
+    conf = read_yaml(args.conf)
+    output_dir = args.output_dir if args.output_dir else args.dataset_dir.strip(os.sep) + '_png'
+    shape_names = conf['shape_names']
+    material_types = []
+    for key, value in conf['materials'].items():
+        material_types += [key] * value
+    scales = conf['scale']
+    nrot = conf['nrot']
+    angles = (np.arange(nrot) / nrot * 360).astype(int)
+    objs = [f'{s}_{i+1}_{m.lower()}_{scale}_{angle}' \
+                for s in shape_names \
+                for i, m in enumerate(material_types)\
+                for scale, angle in product(scales, angles)]
     
-    else:
-        raise Exception(f'Unknown mode: {args.mode}')
+    unfinished = []
+    for o in objs:
+        src_dir = pjoin(args.dataset_dir, o)
+        dst_dir = pjoin(output_dir, o)
+        if not (pexists(src_dir) and pexists(pjoin(src_dir, f'{args.num_light:03d}.exr'))):
+            print(f'[WARN] No src files, Skipping {o}')
+            unfinished.append(o)
+            continue
+        if pexists(pjoin(dst_dir, f'{args.num_light:03d}.png')):
+            print(f'[INFO] Skipping {o}')
+            continue
+        print(f'Processing {o}')
+        mkdir(dst_dir)
+        main(args, src_dir, dst_dir, num_light=args.num_light)
+    write_txt('unfinished.txt', unfinished)

@@ -102,22 +102,6 @@ def main(src_dir, dst_dir):
     img = cmap(norm(depth))
     plt.imsave(pjoin(dst_dir, 'Depth.png'), img)
 
-def handle_single_image(src_image_path):
-    channels, (h, w) = get_channels_size(src_image_path)
-    img = np.zeros((h, w, 3))
-    img[:, :, 0] = channels[f'{view_layer_name}.Combined.R']
-    img[:, :, 1] = channels[f'{view_layer_name}.Combined.G']
-    img[:, :, 2] = channels[f'{view_layer_name}.Combined.B']
-    return img
-
-def handle_albedo(src_image_path):
-    channels, (h, w) = get_channels_size(src_image_path)
-    img = np.zeros((h, w, 3))
-    img[:, :, 0] = channels[f'{view_layer_name}.DiffCol.R']
-    img[:, :, 1] = channels[f'{view_layer_name}.DiffCol.G']
-    img[:, :, 2] = channels[f'{view_layer_name}.DiffCol.B']
-    return img
-
 def convert_all(src_dir, dst_dir):
     channels, (h, w) = get_channels_size(pjoin(src_dir, 'result.exr'))
     
