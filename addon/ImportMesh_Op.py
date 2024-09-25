@@ -13,6 +13,7 @@ from .MeshMeasure_Op import mesh_measure
 
 def import_mesh(path):
     _, extension = os.path.splitext(path)
+    extension = extension.lower()
     if extension == '.ply':
         bpy.ops.import_mesh.ply(filepath=path)
     elif extension == '.stl':
