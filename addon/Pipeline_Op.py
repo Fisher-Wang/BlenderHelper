@@ -54,55 +54,59 @@ def pipeline_ColorPSNeRF(obj_dir, output_base_dir, obj_names):
             get_all(context, od, combined=True)
             convert_all(od, od)
 
-def pipeline(mesh_dir, output_base_dir, mesh_names, material_types):
+def pipeline(mesh_dir, output_base_dir, params):
+    shapes    = params['shapes']
+    materials = params['materials']
+    scales    = params['scales']
+    angles    = params['angles']
+    
     context = bpy.context
-    for mesh_name in mesh_names:
-        for i, material_type in enumerate(material_types):
-            for scale, angle in product([0.5, 1, 2], range(0, 360, 360//1)):
-                o = f'{mesh_name}_{i+1}_{material_type.lower()}_{scale}_{angle}'
-                output_dir = mkdir(pjoin(output_base_dir, o))
-                
-                if pexists(pjoin(output_dir, f'{context.scene.num_light:03d}.exr')):
-                    print(f'[INFO] Skipping {o}')
-                    continue
-                
-                print(mesh_name, output_dir)
-                
-                ## Clear
-                delete_all(context, ['MESH'])
+    for mesh_name, (i, material_type), scale, angle in product(
+        shapes, enumerate(materials), scales, angles):
+        
+        o = f'{mesh_name}_{i+1}_{material_type.lower()}_{scale}_{angle}'
+        output_dir = mkdir(pjoin(output_base_dir, o))
+        
+        if pexists(pjoin(output_dir, f'{context.scene.num_light:03d}.exr')):
+            print(f'[INFO] Skipping {o}')
+            continue
+        
+        print(mesh_name, output_dir)
+        
+        ## Clear
+        delete_all(context, ['MESH'])
 
-                ## Import Mesh
-                mesh_path = pjoin(mesh_dir, f'{mesh_name}.stl')
-                import_mesh(mesh_path)
-                mesh = context.object
-                move_to_right_place(mesh)
-                add_orthographic_camera(context)
-                
-                ## Transform
-                trans_rotate(mesh, angle)
-                trans_scale_z(mesh, scale)
-                
-                ## Split Mesh
-                print('Splitting Object')
-                select_one(context, mesh)
-                split(mesh)
-                
-                ## Attach Material
-                meshes = find_all(context, 'MESH')
-                all_material_params = {}
-                for mesh in meshes:
-                    material, material_params = assign_random_material(material_type)
-                    mesh.data.materials.append(material)
-                    all_material_params[mesh.name] = material_params
-                
-                with open(pjoin(output_dir, 'material_params.yaml'), 'w+') as f:
-                    yaml.dump(all_material_params, f, default_flow_style=False)
-                
-                ## Render Normal Map
-                get_all(context, output_dir, name='result_normal', normal=True)
-                
-                ## Render Lighting
-                render_lighting(context, context.scene.num_light, context.scene.phi_min, context.scene.phi_max, output_dir)
+        ## Import Mesh
+        mesh_path = pjoin(mesh_dir, f'{mesh_name}.stl')
+        import_mesh(mesh_path)
+        mesh = context.object
+        move_to_right_place(mesh)
+        add_orthographic_camera(context)
+        
+        ## Transform
+        trans_rotate(mesh, angle)
+        trans_scale_z(mesh, scale)
+        
+        ## Split Mesh
+        print('Splitting Object')
+        select_one(context, mesh)
+        split(mesh)
+        
+        ## Attach Material
+        meshes = find_all(context, 'MESH')
+        all_material_params = {}
+        for mesh in meshes:
+            material, material_params = assign_random_material(material_type)
+            mesh.data.materials.append(material)
+            all_material_params[mesh.name] = material_params
+        
+        write_yaml(pjoin(output_dir, 'material_params.yaml'), all_material_params)
+        
+        ## Render Normal Map
+        get_all(context, output_dir, name='result_normal', normal=True)
+        
+        ## Render Lighting
+        render_lighting(context, context.scene.num_light, context.scene.phi_min, context.scene.phi_max, output_dir)
 
 class RENDER_OT_PIPELINE(Operator):
     bl_idname = 'render.pipeline'
@@ -110,16 +114,29 @@ class RENDER_OT_PIPELINE(Operator):
     
     def execute(self, context):
         conf = read_yaml(bpy.path.abspath(context.scene.yaml_config_path))
-        material_types = []
-        for key, value in conf['materials'].items():
-            material_types += [key] * value
-        shape_names = conf['shape_names']
+        
+        shapes = conf['shape_names']
         if context.scene.start_shape is not None:
-            shape_names = shape_names[context.scene.start_shape: context.scene.end_shape]
+            shapes = shapes[context.scene.start_shape: context.scene.end_shape]
+        
+        materials = []
+        for key, value in conf['materials'].items():
+            materials += [key] * value
+        
+        scales = conf['scale']
+        nrot = conf['nrot']
+        angles = conf['angles'] if 'angles' in conf else (np.arange(nrot) / nrot * 360).astype(int)
+        
+        params = {
+            "shapes": shapes,
+            "materials": materials,
+            "scales": scales,
+            "angles": angles,
+        }
+        
         pipeline(
             mesh_dir=bpy.path.abspath(context.scene.mesh_dir),
             output_base_dir=bpy.path.abspath(context.scene.output_base_dir),
-            mesh_names=shape_names,
-            material_types=material_types,
+            params=params
         )
         return {'FINISHED'}
