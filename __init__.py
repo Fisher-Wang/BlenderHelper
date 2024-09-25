@@ -17,13 +17,32 @@ bl_info = {
     "description" : "",
     "blender" : (3, 3, 1),
     "version" : (0, 0, 1),
-    "location" : "",
+    "location" : "View3d",
     "warning" : "",
     "category" : "Generic"
 }
 
+import bpy
+
+from .ImportMesh_Op import IMPORT_MESH_OT_ANY, CAMERA_OT_ADD_ORTHOGRAPHIC
+from .ImportMesh_Panel import HELPER_PT_IMPORT_MESH
+from .property import ObjectMeasurePropertyGroup
+
+classes = (
+    IMPORT_MESH_OT_ANY, 
+    CAMERA_OT_ADD_ORTHOGRAPHIC,
+    HELPER_PT_IMPORT_MESH,
+    
+    ObjectMeasurePropertyGroup,
+)
+
 def register():
-    ...
+    for c in classes:
+        bpy.utils.register_class(c)
+    
+    from .property import declare_properies
+    declare_properies()
 
 def unregister():
-    ...
+    for c in classes:
+        bpy.utils.unregister_class(c)
