@@ -41,6 +41,7 @@ from .ImagePlane_Op import *
 from .ImagePlane_Panel import *
 from .Transform_Op import *
 from .Transform_Panel import *
+from .UtilRelight import *
 from .property import *
 
 classes = (
@@ -81,6 +82,9 @@ classes = (
     RENDER_OT_PIPELINE_COLORPSNERF,
     
     HELPER_PT_RENDER_SETTING,
+    
+    RENDER_OP_RELIGHT,
+    HELPER_PT_RELIGHT,
 
     ObjectMeasurePropertyGroup,
     OutputRenderPassPropertyGroup,

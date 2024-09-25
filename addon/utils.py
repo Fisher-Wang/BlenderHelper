@@ -6,6 +6,7 @@ import json
 from time import time
 import numpy as np
 from mathutils import Vector
+from os.path import join as pjoin
 
 VIEW_LAYER_NAME = 'ViewLayer'
 

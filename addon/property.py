@@ -164,3 +164,11 @@ def declare_properies():
     bpy.types.Scene.RT_text = StringProperty(
         name='RT',
     )
+    
+    bpy.types.Scene.light_direction_filepath = StringProperty(
+        name = 'Light Direction Filepath',
+        description = 'Light Direction Filepath',
+        default = '',
+        maxlen = 1024,
+        subtype = 'FILE_PATH'
+    )
