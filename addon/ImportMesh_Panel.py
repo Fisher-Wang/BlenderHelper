@@ -17,4 +17,6 @@ class HELPER_PT_IMPORT_MESH(Panel):
         row = layout.row()
         row.operator('mesh.measure')
         row = layout.row()
+        row.operator('mesh.rescale')
+        row = layout.row()
         row.prop(context.scene, 'output_dir')

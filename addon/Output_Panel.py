@@ -11,6 +11,8 @@ class HELPER_PT_OUTPUT(Panel):
     def draw(self, context):
         layout = self.layout
         row = layout.row()
+        row.operator('render.hide_others', icon='PROP_CON')
+        row = layout.row()
         row.operator('scene.export_normal')
         row = layout.row()
         row.operator('scene.export_image', text='Image')

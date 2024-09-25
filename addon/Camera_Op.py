@@ -26,7 +26,7 @@ def add_orthographic_camera(context):
     return camera
 
 class CAMERA_OT_ADD_ORTHOGRAPHIC(bpy.types.Operator):
-    bl_label = 'Add Camera'
+    bl_label = 'Add Otrho Camera'
     bl_idname = 'camera.add_orthographic'
     def execute(self, context):
         add_orthographic_camera(context)
