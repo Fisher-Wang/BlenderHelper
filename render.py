@@ -120,10 +120,12 @@ def main_cmd():
     scene.yaml_config_path = args.conf
     scene.output_base_dir = args.result_dir
     scene.mesh_dir = args.mesh_dir
+    scene.start_shape = args.start_shape
+    scene.end_shape = args.end_shape
     
     scene.render.engine = 'CYCLES'
-    scene.render.resolution_x = 410
-    scene.render.resolution_y = 410
+    scene.render.resolution_x = 400
+    scene.render.resolution_y = 400
     scene.render.image_settings.color_mode = 'RGB'
     scene.cycles.max_bounces = 12
     scene.num_light = 100

@@ -142,3 +142,12 @@ def declare_properies():
         default='',
         subtype='FILE_PATH'
     )
+
+    bpy.types.Scene.start_shape = IntProperty(
+        name='Start Shape',
+        default=0,
+    )
+    bpy.types.Scene.end_shape = IntProperty(
+        name='End Shape',
+        default=0,
+    )

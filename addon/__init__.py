@@ -15,8 +15,8 @@ bl_info = {
     "name" : "DynamicMVPSRenderer",
     "author" : "Fisher Wang",
     "description" : "",
-    "blender" : (2, 83, 20),
-    "version" : (0, 0, 1),
+    "blender" : (3, 3, 1),
+    "version" : (0, 1, 0),
     "location" : "View3d",
     "warning" : "",
     "category" : "Generic"
