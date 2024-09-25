@@ -101,7 +101,8 @@ def main(args, src_dir, dst_dir, num_light=1000):
             cv2.imwrite(pjoin(dst_dir, f'{i+1:03d}.png'), (imgs[i]*65535).astype('uint16'))
     
     ## Material Params & light directions
-    shutil.copy(pjoin(src_dir, 'material_params.yaml'), pjoin(dst_dir, 'material_params.yaml'))
+    if pexists(pjoin(src_dir, 'material_params.yaml')):
+        shutil.copy(pjoin(src_dir, 'material_params.yaml'), pjoin(dst_dir, 'material_params.yaml'))
     shutil.copy(pjoin(src_dir, 'light_directions.txt'), pjoin(dst_dir, 'light_directions.txt'))
 
 if  __name__ =="__main__":
