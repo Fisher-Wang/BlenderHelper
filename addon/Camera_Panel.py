@@ -12,3 +12,9 @@ class HELPER_PT_CAMERA(Panel):
         layout = self.layout
         row = layout.row()
         row.operator('camera.add_orthographic')
+        row = layout.row()
+        row.prop(context.scene, 'camera_phi')
+        row = layout.row()
+        row.prop(context.scene, 'camera_theta')
+        row = layout.row()
+        row.operator('camera.set_position')

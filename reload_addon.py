@@ -7,10 +7,11 @@ import bpy
 import os
 from os.path import join as pjoin
 import sys
+import shutil
 import zipfile
 
 ADDON_NAME = 'addon'
-cur_dir = os.path.dirname(bpy.context.space_data.text.filepath)
+cur_dir = os.path.dirname(bpy.path.abspath(bpy.context.space_data.text.filepath))
 
 def zip_addon():
     # Remove old zip
@@ -37,6 +38,12 @@ def create_link_in_user_addon_directory(directory, link_path):
     else:
         os.symlink(str(directory), str(link_path), target_is_directory=True)
 
+def copy_to_user_addon_directory(directory, link_path):
+    if os.path.exists(link_path):
+        shutil.rmtree(link_path)
+    
+    shutil.copytree(directory, link_path)
+
 if __name__ == '__main__':    
     # Choice 1: Install addon (zip)
     # Sometimes it fails without any reason.
@@ -47,7 +54,11 @@ if __name__ == '__main__':
     user_addon_directory = bpy.utils.user_resource('SCRIPTS', path="addons")
     load_path = pjoin(user_addon_directory, ADDON_NAME)
     source_path = pjoin(cur_dir, 'addon')
-    create_link_in_user_addon_directory(source_path, load_path)
+    # create_link_in_user_addon_directory(source_path, load_path)
+    
+    # Choice 3: Install addon (copy directory)
+    copy_to_user_addon_directory(source_path, load_path)
+    
     
     # Disable addon
     bpy.ops.preferences.addon_disable(module=ADDON_NAME)
