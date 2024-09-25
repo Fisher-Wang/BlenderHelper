@@ -39,6 +39,8 @@ from .Pipeline_Panel import *
 from .Setting_Panel import *
 from .ImagePlane_Op import *
 from .ImagePlane_Panel import *
+from .Transform_Op import *
+from .Transform_Panel import *
 from .property import ObjectMeasurePropertyGroup
 
 classes = (
@@ -46,6 +48,11 @@ classes = (
     MESH_OT_RESCALE,
     MESH_OT_MEASURE,
     HELPER_PT_IMPORT_MESH,
+    
+    MESH_OT_SET_ORIGIN,
+    MESH_OT_RESET,
+    MESH_OT_SET,
+    HELPER_PT_TRANSFORM,
     
     SCENE_OT_IMPORT_IMAGE_PLANE,
     SCENE_OT_SWITCH_VISIBILITY,

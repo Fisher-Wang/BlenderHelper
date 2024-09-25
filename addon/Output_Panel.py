@@ -6,7 +6,7 @@ class HELPER_PT_OUTPUT(Panel):
     bl_idname = 'HELPER_PT_OUTPUT'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_category = 'RenderHelper'
+    bl_category = 'MVPSRenderHelper'
     
     def draw(self, context):
         layout = self.layout

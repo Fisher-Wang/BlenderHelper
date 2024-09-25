@@ -2,11 +2,6 @@ import bpy
 import numpy as np
 from .utils import *
 
-def apply_homo_matrix(points: np.ndarray, matrix: np.ndarray):
-    assert(points.shape[-1] == 3)
-    assert(matrix.shape == (4, 4))
-    return np.hstack([points, np.ones((points.shape[0], 1))]) @ matrix.T
-
 def mesh_measure(mesh):
     points = np.array([v.co for v in mesh.data.vertices])
     matrix_world = np.asarray(mesh.matrix_world)

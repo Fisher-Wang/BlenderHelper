@@ -4,7 +4,7 @@ from bpy.types import Panel
 class CAMERA_BASE:
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_category = 'RenderHelper'
+    bl_category = 'MVPSRenderHelper'
     bl_options = {"DEFAULT_CLOSED"}
 
 class HELPER_PT_CAMERA(CAMERA_BASE, Panel):
