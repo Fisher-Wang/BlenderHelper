@@ -24,14 +24,17 @@ bl_info = {
 
 import bpy
 
-from .ImportMesh_Op import IMPORT_MESH_OT_ANY, CAMERA_OT_ADD_ORTHOGRAPHIC
-from .ImportMesh_Panel import HELPER_PT_IMPORT_MESH
+from .ImportMesh_Op import *
+from .ImportMesh_Panel import *
+from .Camera_Op import *
+from .Camera_Panel import *
 from .property import ObjectMeasurePropertyGroup
 
 classes = (
     IMPORT_MESH_OT_ANY, 
-    CAMERA_OT_ADD_ORTHOGRAPHIC,
     HELPER_PT_IMPORT_MESH,
+    CAMERA_OT_ADD_ORTHOGRAPHIC,
+    HELPER_PT_CAMERA,
     
     ObjectMeasurePropertyGroup,
 )
