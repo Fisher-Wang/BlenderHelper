@@ -61,6 +61,20 @@ def declare_properies():
         max=90,
         description='The maximum \\phi'
     )
+    bpy.types.Scene.phi = bpy.props.FloatProperty(
+        name='Phi',
+        default=45,
+        min=0,
+        max=180,
+        description='Angle of pitch'
+    )
+    bpy.types.Scene.theta = bpy.props.FloatProperty(
+        name='Theta',
+        default=0,
+        min=-180,
+        max=360,
+        description='Azimuth'
+    )
 
     def get_frame(self):
         return self.get('frame_custom', self.frame_current)

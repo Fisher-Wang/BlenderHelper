@@ -3,6 +3,7 @@ import os
 import shutil
 import math
 import numpy as np
+from os.path import join as pjoin
 
 from mathutils import Vector
 from .utils import *
@@ -18,8 +19,9 @@ def import_mesh(path):
     elif extension == '.fbx':
         bpy.ops.import_scene.fbx(filepath=path)
     elif extension == '.blend':
-        shutil.copy(path, 'tmp.blend')
-        bpy.ops.wm.open_mainfile(filepath='tmp.blend')
+        dst_path = pjoin(os.path.dirname(path), 'tmp.blend')
+        shutil.copy(path, dst_path)  # TODO: delete this if not debugging
+        bpy.ops.wm.open_mainfile(filepath=dst_path)
     else:
         raise ValueError('bad mesh extension')
 
