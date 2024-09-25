@@ -41,7 +41,7 @@ from .ImagePlane_Op import *
 from .ImagePlane_Panel import *
 from .Transform_Op import *
 from .Transform_Panel import *
-from .property import ObjectMeasurePropertyGroup
+from .property import *
 
 classes = (
     IMPORT_MESH_OT_ANY, 
@@ -60,6 +60,7 @@ classes = (
     
     CAMERA_OT_ADD_ORTHOGRAPHIC,
     CAMERA_OT_SET_POSITION,
+    CAMERA_OT_SET_POSITION_FROM_MATRIX,
     HELPER_PT_CAMERA,
     HELPER_PT_CAMERA_POSE,
     
@@ -77,10 +78,12 @@ classes = (
     
     RENDER_OT_PIPELINE,
     HELPER_PT_PIPELINE,
+    RENDER_OT_PIPELINE_COLORPSNERF,
     
     HELPER_PT_RENDER_SETTING,
 
     ObjectMeasurePropertyGroup,
+    OutputRenderPassPropertyGroup,
 )
 
 def register():

@@ -181,6 +181,13 @@ def convert_all(src_dir, dst_dir):
         img = img / img.max()  # XXX: just for preview
         img = img[..., ::-1]  # RGB to BGR
         cv2.imwrite(pjoin(dst_dir, 'preview_albedo.png'), (img*65535).astype('uint16'), [cv2.IMWRITE_PNG_COMPRESSION, 9])
+    
+    ## Shadow
+    if f'{view_layer_name}.Shadow.R' in channels.keys():
+        shadow = channels[f'{view_layer_name}.Shadow.R']
+        shadow = img_as_bool(shadow)
+        save_binary_image(pjoin(dst_dir, 'shadow.png'), shadow)
+        np.save(pjoin(dst_dir, 'shadow.npy'), shadow)
 
 if  __name__ =="__main__":
     parser = argparse.ArgumentParser()

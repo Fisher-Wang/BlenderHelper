@@ -16,6 +16,8 @@ def mesh_measure(mesh):
     mesh.measure.lenY = mesh.measure.maxY - mesh.measure.minY
     mesh.measure.lenZ = mesh.measure.maxZ - mesh.measure.minZ
     print(f'minX = {mesh.measure.minX}, maxX = {mesh.measure.maxX}')
+    print(f'minY = {mesh.measure.minY}, maxY = {mesh.measure.maxY}')
+    print(f'minZ = {mesh.measure.minZ}, maxZ = {mesh.measure.maxZ}')
 
 class MESH_OT_MEASURE(bpy.types.Operator):
     bl_label = 'Measure'

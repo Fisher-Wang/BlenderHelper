@@ -1,4 +1,5 @@
 import bpy
+from bpy.types import PropertyGroup
 from bpy.props import *
 from .utils import *
 
@@ -6,7 +7,7 @@ from .utils import *
 ## Self-Defined Properties
 #############################
 
-class ObjectMeasurePropertyGroup(bpy.types.PropertyGroup):
+class ObjectMeasurePropertyGroup(PropertyGroup):
     minX: FloatProperty(name='minX')
     maxX: FloatProperty(name='maxX')
     minY: FloatProperty(name='minY')
@@ -17,8 +18,16 @@ class ObjectMeasurePropertyGroup(bpy.types.PropertyGroup):
     lenY: FloatProperty(name='lenY')
     lenZ: FloatProperty(name='lenZ')
 
+class OutputRenderPassPropertyGroup(PropertyGroup):
+    combined: BoolProperty(name='Combined', default=False)
+    normal:   BoolProperty(name='Normal',   default=False)
+    albedo:   BoolProperty(name='Albedo',   default=False)
+    depth:    BoolProperty(name='Depth',    default=False)
+    shadow:   BoolProperty(name='Shadow',   default=False)
+
 def declare_properies():
     bpy.types.Object.measure = PointerProperty(type=ObjectMeasurePropertyGroup)
+    bpy.types.Scene.output_pass = PointerProperty(type=OutputRenderPassPropertyGroup)
     bpy.types.Scene.mesh_path = StringProperty(
         name='Mesh Path',
         default='',
@@ -150,4 +159,8 @@ def declare_properies():
     bpy.types.Scene.end_shape = IntProperty(
         name='End Shape',
         default=0,
+    )
+    
+    bpy.types.Scene.RT_text = StringProperty(
+        name='RT',
     )

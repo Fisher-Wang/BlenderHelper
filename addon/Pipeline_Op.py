@@ -14,7 +14,7 @@ from .Material_Op import assign_random_material
 from .Transform_Op import trans_rotate, trans_scale_z
 from itertools import product
 
-def pipeline_ColorPSNeRF(obj_dir, output_base_dir, obj_names):
+def pipeline_ColorPSNeRF_old(obj_dir, output_base_dir, obj_names):
     context = bpy.context
     for obj_name in obj_names:
         output_dir = mkdir(pjoin(output_base_dir, obj_name))
@@ -53,6 +53,112 @@ def pipeline_ColorPSNeRF(obj_dir, output_base_dir, obj_names):
             switch_cast_shadow(context, enable=False)
             get_all(context, od, combined=True)
             convert_all(od, od)
+
+def pipeline_ColorPSNeRF(output_base_dir):
+    context = bpy.context
+    
+    ## Config
+    context.scene.cycles.max_bounces = 0
+    bpy.data.worlds["World"].node_tree.nodes["Background"].inputs[0].default_value = (0, 0, 0, 1)
+    context.scene.render.resolution_x = 512
+    context.scene.render.resolution_y = 512
+    
+    cur_dir = r'C:\fsw\code\psnerf_dataset\addon'
+    data = read_json(pjoin(cur_dir, 'data/s3nerf.json'))
+    lds = data['light_directions']
+    K, R, T = np.array(data['K']), np.array(data['R']), np.array(data['T'])
+    delete_all(context, ['CAMERA'])
+    camera = get_blender_camera_from_KRT(K, R, T, 1)
+    
+    objs = ['bunny']
+    output_base_dir = pjoin(r'C:\fsw\code\psnerf_dataset', 'output_dataset')
+    for o in objs:
+        output_dir = mkdir(pjoin(output_base_dir, o))
+        tmp_dir = mkdir(pjoin(output_dir, 'tmp'))
+        rgb_dir = mkdir(pjoin(output_dir, 'rgb'))
+        vis_dir = mkdir(pjoin(output_dir, 'visibility'))
+        
+        get_camera(camera, tmp_dir)
+        get_all(context, tmp_dir, normal=True, depth=True, albedo=True)
+        convert_all(tmp_dir, tmp_dir)
+        
+        ## Convert to S3NeRF format
+        shutil.move(pjoin(tmp_dir, 'Normal_gt.png'), pjoin(output_dir, 'normal.png'))
+        shutil.move(pjoin(tmp_dir, 'Normal_gt.npy'), pjoin(output_dir, 'normal.npy'))
+        shutil.move(pjoin(tmp_dir, 'Depth.npy'), pjoin(output_dir, 'depth.npy'))
+        shutil.move(pjoin(tmp_dir, 'albedo.npy'), pjoin(output_dir, 'albedo.npy'))
+        
+        
+        
+        for i, ld in enumerate(lds):
+            delete_all(context, ['LIGHT'])
+            light = create_light(context, type='POINT', energy=100)
+            light.location = ld
+            light.data.shadow_soft_size = 0  # no soft shadow
+            
+            switch_cast_shadow(context, enable=True)
+            get_all(context, tmp_dir, normal=True, depth=True, albedo=True, combined=True, shadow=True)
+            convert_all(tmp_dir, tmp_dir)
+
+            ## Convert to S3NeRF format
+            shutil.move(pjoin(tmp_dir, 'image.png'), pjoin(rgb_dir, f'{i+1:03d}.png'))
+            shutil.move(pjoin(tmp_dir, 'image.npy'), pjoin(rgb_dir, f'{i+1:03d}.npy'))
+            shutil.move(pjoin(tmp_dir, 'shadow.png'), pjoin(vis_dir, f'{i+1:03d}.png'))
+            shutil.move(pjoin(tmp_dir, 'shadow.npy'), pjoin(vis_dir, f'{i+1:03d}.npy'))
+            
+            # if i > 0: break
+        
+        for mesh in find_all(context, 'MESH'):
+            mesh.hide_render = not mesh.name == o
+        get_all(context, tmp_dir, normal=True)
+        convert_all(tmp_dir, tmp_dir)
+        shutil.move(pjoin(tmp_dir, 'mask.png'), pjoin(output_dir, 'mask_obj.png'))
+        
+        #* comment this when debugging
+        # shutil.rmtree(tmp_dir)
+        
+        ###################################
+        ## Convert to Jipeng's format (also for S3NeRF format)
+        ###################################
+        ## Light Directions 
+        np.save(pjoin(output_dir, 'light_dirs.npy'), lds)
+
+        ## Images
+        imgs = []
+        for i in range(len(lds)):
+            img = np.load(pjoin(rgb_dir, f'{i+1:03d}.npy'))
+            imgs.append(img)
+        imgs = np.array(imgs)
+        imgs /= imgs.max()  # normalize to 0~1
+        np.save(pjoin(output_dir, 'imgs.npy'), imgs)
+        # for S3NeRF
+        for i, img in enumerate(imgs):
+            cv2.imwrite(pjoin(rgb_dir, f'{i+1:03d}.png'), (img*255).astype('uint8'), [cv2.IMWRITE_PNG_COMPRESSION, 9])
+        
+        ## Mask
+        from skimage import io, img_as_bool
+        mask = img_as_bool(io.imread(pjoin(output_dir, 'mask_obj.png')))
+        np.save(pjoin(output_dir, 'mask.npy'), mask)
+        
+        ## Visibility
+        viss = []
+        for i in range(len(lds)):
+            vis = np.load(pjoin(vis_dir, f'{i+1:03d}.npy'))
+            viss.append(vis)
+        viss = np.array(viss)
+        np.save(pjoin(output_dir, 'viss.npy'), viss)
+        
+        ## Normal
+        shutil.copy(pjoin(output_dir, 'normal.npy'), pjoin(output_dir, 'normal_obj.npy'))
+        
+
+class RENDER_OT_PIPELINE_COLORPSNERF(Operator):
+    bl_idname = 'render.pipeline_colorpsnerf'
+    bl_label = 'Pipeline ColorPSNeRF'
+    
+    def execute(self, context):
+        pipeline_ColorPSNeRF(bpy.path.abspath(context.scene.output_dir))
+        return {'FINISHED'}
 
 def pipeline(mesh_dir, output_base_dir, params):
     shapes    = params['shapes']

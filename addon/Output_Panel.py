@@ -22,3 +22,10 @@ class HELPER_PT_OUTPUT(Panel):
         row.operator('scene.export_albedo')
         row = layout.row()
         row.operator('scene.export_image', text='Camera Mat')
+        
+        output_pass = context.scene.output_pass
+        layout.prop(output_pass, 'combined')
+        layout.prop(output_pass, 'normal')
+        layout.prop(output_pass, 'albedo')
+        layout.prop(output_pass, 'depth')
+        layout.prop(output_pass, 'shadow')
