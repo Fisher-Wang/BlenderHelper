@@ -26,15 +26,27 @@ import bpy
 
 from .ImportMesh_Op import *
 from .ImportMesh_Panel import *
+from .MeshMeasure_Op import *
 from .Camera_Op import *
 from .Camera_Panel import *
+from .AnimationControl_Panel import *
+from .Output_Op import *
+from .Output_Panel import *
 from .property import ObjectMeasurePropertyGroup
 
 classes = (
     IMPORT_MESH_OT_ANY, 
+    MESH_OT_MEASURE,
     HELPER_PT_IMPORT_MESH,
+    
     CAMERA_OT_ADD_ORTHOGRAPHIC,
     HELPER_PT_CAMERA,
+    
+    HELPER_PT_ANIMATION_CONTROL,
+    
+    SCENE_OT_EXPORT_NORMAL,
+    HELPER_PT_OUTPUT,
+
     
     ObjectMeasurePropertyGroup,
 )

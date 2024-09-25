@@ -1,4 +1,5 @@
 import bpy
+from .utils import *
 
 #############################
 ## Self-Defined Properties
@@ -59,4 +60,19 @@ def declare_properies():
         min=0,
         max=90,
         description='The maximum \\phi'
+    )
+
+    def get_frame(self):
+        return self.get('frame_custom', self.frame_current)
+    def set_frame(self, value):
+        frame_start, frame_end = get_frame_range_scene(self)
+        if value > frame_end:
+            value = frame_end
+        self['frame_custom'] = value
+        self.frame_current = value
+    bpy.types.Scene.frame_custom = bpy.props.IntProperty(
+        name='Current Frame',
+        get=get_frame,
+        set=set_frame,
+        description='Current frame (DIY version)'
     )
